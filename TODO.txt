@@ -1,0 +1,6 @@
+pdb format support
+save layout
+GPL
+comments
+help
+selection
