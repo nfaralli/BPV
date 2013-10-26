@@ -7,7 +7,8 @@ MyMainWin::MyMainWin(){
   float alpha=0.7;
   int   xScreen=QApplication::desktop()->width();
   int   yScreen=QApplication::desktop()->height();
-  if(((float)xScreen)/yScreen > (64./27.*1.1)) //biggest aspect ratio=(4/3)^3. if bigger, most likely a dual screen
+  //biggest aspect ratio=(4/3)^3. if bigger, most likely a dual screen
+  if(((float)xScreen)/yScreen > (64./27.*1.1))
     xScreen/=2;
   if(((float)xScreen)/yScreen < (4./3./1.1))
     yScreen/=2;
@@ -105,14 +106,19 @@ void MyMainWin::createDockWindows(){
 
   QWidget *setup=new QWidget(this);
   infoBgd=new InfoWidgetBgd;
-  QObject::connect(infoBgd,SIGNAL(backgroundChanged(MyColor)),myWidget->glWidget,SLOT(updateBackground(MyColor)));
+  QObject::connect(infoBgd,SIGNAL(backgroundChanged(MyColor)),
+                   myWidget->glWidget,SLOT(updateBackground(MyColor)));
   infoPar=new InfoWidgetPar;
-  QObject::connect(infoPar,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledParticles(bool)));
-  QObject::connect(infoPar,SIGNAL(partSpecChanged(int,PartSpec)),myWidget->glWidget,SLOT(setPartSpec(int,PartSpec)));
-  QObject::connect(infoPar,SIGNAL(allPartSpecChanged(PartSpec*)),myWidget->glWidget,SLOT(setAllPartSpec(PartSpec*)));
+  QObject::connect(infoPar,SIGNAL(clicked(bool)),
+                   myWidget->glWidget,SLOT(setEnabledParticles(bool)));
+  QObject::connect(infoPar,SIGNAL(partSpecChanged(int,PartSpec)),
+                   myWidget->glWidget,SLOT(setPartSpec(int,PartSpec)));
+  QObject::connect(infoPar,SIGNAL(allPartSpecChanged(PartSpec*))
+                   ,myWidget->glWidget,SLOT(setAllPartSpec(PartSpec*)));
   infoBnd=new InfoWidgetBnd;
   QObject::connect(infoBnd,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledBonds(bool)));
-  QObject::connect(infoBnd,SIGNAL(bondSpecChanged(BondSpec)),myWidget->glWidget,SLOT(setBondSpec(BondSpec)));
+  QObject::connect(infoBnd,SIGNAL(bondSpecChanged(BondSpec)),
+                   myWidget->glWidget,SLOT(setBondSpec(BondSpec)));
   infoGeo=new InfoWidgetGeo;
   QObject::connect(infoGeo,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledGeometry(bool)));
   QObject::connect(infoGeo,SIGNAL(geometryChanged()),myWidget->glWidget,SLOT(resetGeometry()));
@@ -139,7 +145,8 @@ void MyMainWin::createDockWindows(){
 }
 
 void MyMainWin::open(){
-  QString fileName = QFileDialog::getOpenFileName(this,QString(),QString(),QString("Data file (*.par);;Geometry file (*.geo)"));
+  QString fileName = QFileDialog::getOpenFileName(
+      this,QString(),QString(),QString("Data file (*.par);;Geometry file (*.geo)"));
   open(fileName);
 }
 
@@ -176,9 +183,7 @@ void MyMainWin::open(QString fileName){
 
 void MyMainWin::about(){
   QMessageBox::about(this, tr("About bpv"),
-                     tr("<h3>About bpv</h3>"
-                     "<p>This basic particle viewer (bpv) was developped in 2008-2009 by Nicolas Faralli.</p>"
-                     "<p>The gl2ps library was used to export postscript files."
-                     " For more information, check <a href=\"http://geuz.org/gl2ps/\">http://geuz.org/gl2ps/</a>. </p>"
-                     "Report problems to <a href=\"mailto:nfaralli@asu.edu\">nfaralli@asu.edu</a>."));
+      tr("<h3>About bpv</h3>"
+      "<p>This basic particle viewer (bpv) was developped in 2008-2009 by Nicolas Faralli.</p>"
+      "Report problems to <a href=\"mailto:nfaralli@asu.edu\">nfaralli@gmail.com</a>."));
 }

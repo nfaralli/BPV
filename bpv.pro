@@ -8,7 +8,6 @@ HEADERS += include/textdialog.h \
     include/colordialog.h \
     include/exportdialog.h \
     include/geometry.h \
-    include/gl2ps.h \
     include/glgeometry.h \
     include/glwidget.h \
     include/infowidgetbgd.h \
@@ -26,7 +25,6 @@ SOURCES += source/textdialog.cpp \
     source/colordialog.cpp \
     source/exportdialog.cpp \
     source/geometry.cpp \
-    source/gl2ps.c \
     source/glgeometry.cpp \
     source/glwidget.cpp \
     source/infowidgetbgd.cpp \
