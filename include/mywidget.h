@@ -25,67 +25,67 @@
 #include "textdialog.h"
 
 class MyWidget : public QWidget{
-	
-	Q_OBJECT
-	
+
+  Q_OBJECT
+
 public:
-	MyWidget(QWidget *parent=0);
-	void clearParticles();
-	void clearGeometry();
-	
+  MyWidget(QWidget *parent=0);
+  void clearParticles();
+  void clearGeometry();
+
 signals:
   void stepChanged(int theStep);
   void axisToggled(bool enabled);
   void viewToggled(bool enabled);
   void particlesChanged(bool enabled);
   void geometryChanged(bool enabled);
-  
+
 public slots:
-	void setNewParticles(Particles *part);
-	void setNewGeometry(MyGeometry *geo);
+  void setNewParticles(Particles *part);
+  void setNewGeometry(MyGeometry *geo);
   void zoomFit();
-	void center();
-	void setSpeed(GLint fps);
+  void center();
+  void setSpeed(GLint fps);
   void exportScene();
-	void rotateScene();
-	void setBlanking();
-	void setTrajectory();
-	void setText();
-	
+  void rotateScene();
+  void setBlanking();
+  void setTrajectory();
+  void setText();
+
 private slots:
-	void playPause();
-	void play();
-	void pause();
-	void stop();
-	void updateWidget();
-	void setDefaultFont();
-	
+  void playPause();
+  void play();
+  void pause();
+  void stop();
+  void updateWidget();
+  void setDefaultFont();
+
 protected:
-	void keyPressEvent(QKeyEvent *event);
-	
+  void keyPressEvent(QKeyEvent *event);
+
 public:
-  GLWidget       		*glWidget;
-	RotateDialog   		*rotateDialog;
-	BlankingDialog 		*blankingDialog;
-	TrajectoryDialog 	*trajectoryDialog;
-	TextDialog        *textDialog;
-  
+  GLWidget         *glWidget;
+  RotateDialog     *rotateDialog;
+  BlankingDialog   *blankingDialog;
+  TrajectoryDialog *trajectoryDialog;
+  TextDialog       *textDialog;
+
 private:
-	QSlider     *timeSl;
-	QPushButton *playBt;
-	QPushButton *stopBt;
-	QString     timeSt;
-	QLabel      *timeLb;
-	QHBoxLayout *hLayout;
-	QVBoxLayout *mainLayout;
-	bool        isPlaying;
-	QIcon       playIcon;
-	QIcon       pauseIcon;
-	QIcon       stopIcon;
-  Particles   *particles;
-	MyGeometry  *geometry;
-	GLint  framePerSec;
-	QTimer *timer;
+  QSlider      *timeSl;
+  QPushButton  *playBt;
+  QPushButton  *stopBt;
+  QString      timeSt;
+  QLabel       *timeLb;
+  QHBoxLayout  *hLayout;
+  QVBoxLayout  *mainLayout;
+  bool         isPlaying;
+  QIcon        playIcon;
+  QIcon        pauseIcon;
+  QIcon        stopIcon;
+  Particles    *particles;
+  MyGeometry   *geometry;
+  GLint        framePerSec;
+  QTimer       *timer;
   ExportDialog *exportDialog;
 };
 

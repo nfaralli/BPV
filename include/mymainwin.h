@@ -22,38 +22,38 @@
 class MyMainWin : public QMainWindow{
 
   Q_OBJECT
-  
+
 public :
-	MyMainWin();
-	void open(QString);
-	
+  MyMainWin();
+  void open(QString);
+
 private slots:
   void open();
-	void about();
+  void about();
 
 private:
-	void createDockWindows();
-	
-	MyWidget *myWidget;
-	QMenu    *viewMenu;
-	QMenu    *fileMenu;
-	QMenu    *helpMenu;
-	QAction  *openAct;
-  QAction  *exportAct;
-	QAction  *exitAct;
-	QAction  *zoomFitAct;
-	QAction  *centerAct;
-	QAction  *rotateAct;
-	QAction  *blankingAct;
-	QAction  *trajectoryAct;
-	QAction  *textAct;
-	QAction  *visuAct;
-  QAction  *axisAct;
-  QAction  *viewAct;
-	QAction  *aboutAct;
-	QAction  *aboutQtAct;
+  void createDockWindows();
+
+  MyWidget      *myWidget;
+  QMenu         *viewMenu;
+  QMenu         *fileMenu;
+  QMenu         *helpMenu;
+  QAction       *openAct;
+  QAction       *exportAct;
+  QAction       *exitAct;
+  QAction       *zoomFitAct;
+  QAction       *centerAct;
+  QAction       *rotateAct;
+  QAction       *blankingAct;
+  QAction       *trajectoryAct;
+  QAction       *textAct;
+  QAction       *visuAct;
+  QAction       *axisAct;
+  QAction       *viewAct;
+  QAction       *aboutAct;
+  QAction       *aboutQtAct;
   Particles     *particles;
-	MyGeometry    *geometry;
+  MyGeometry    *geometry;
   InfoWidgetBgd *infoBgd;
   InfoWidgetPar *infoPar;
   InfoWidgetBnd *infoBnd;

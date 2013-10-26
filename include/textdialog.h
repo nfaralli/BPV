@@ -16,6 +16,7 @@
 #define DEFAULT_FONT_SIZE 12
 
 class TextDialog : public QDialog {
+
 Q_OBJECT
 
 public:
@@ -36,17 +37,17 @@ private:
   void findFonts();
 
 private:
-  QColor      textColor;
-  QCheckBox   *showCB;
-  QPushButton *colorPB;
-  QComboBox   *fontCB;
-  QComboBox   *sizeCB;
-  QDialogButtonBox *closeBB;
-  QString     fontPath;
-  QString     currentFont;
-  QStringList fontList;
-  QList<QList<int> >  sizeList;
-  bool        enableFontChangedSig;
+  QColor             textColor;
+  QCheckBox          *showCB;
+  QPushButton        *colorPB;
+  QComboBox          *fontCB;
+  QComboBox          *sizeCB;
+  QDialogButtonBox   *closeBB;
+  QString            fontPath;
+  QString            currentFont;
+  QStringList        fontList;
+  QList<QList<int> > sizeList;
+  bool               enableFontChangedSig;
 };
 
 #endif

@@ -18,9 +18,9 @@
   radius  type 2  (1 float)
   etc.
   nbVariables (1 byte)
-  name		x	axis		 (NAME_LENGTH bytes)
-  name		y	axis		 (NAME_LENGTH bytes)
-  name		z	axis		 (NAME_LENGTH bytes)
+  name    x  axis    (NAME_LENGTH bytes)
+  name    y  axis    (NAME_LENGTH bytes)
+  name    z  axis    (NAME_LENGTH bytes)
   name    variable 1 (NAME_LENGTH bytes)
   name    variable 2 (NAME_LENGTH bytes)
   etc.
@@ -39,8 +39,8 @@
   x coordinate particle 1 step 1  (1 float)
   y coordinate particle 1 step 1  (1 float)
   z coordinate particle 1 step 1  (1 float)
-  variable 1 particle 1 step 1 		(1 float)
-  variable 2 particle 1 step 1 		(1 float)
+  variable 1 particle 1 step 1    (1 float)
+  variable 2 particle 1 step 1    (1 float)
   etc.
   x coordinate particle 2 step 1  (1 float)
   etc.
@@ -62,7 +62,7 @@ Particles *loadParticlesPAR(QString &fileName){
   unsigned int  index1,index2;
   float         t,x,y,z,var,radius,bRadius;
   int k,n,i;
-  
+
   /*check if file is OK before setting particles*/
   file=fopen(fileName.toAscii().constData(),"rb");
   nread=fread(filetype,1,3,file);
@@ -72,32 +72,38 @@ Particles *loadParticlesPAR(QString &fileName){
     return NULL;
   }
   if(fread(&nbTypes,sizeof(unsigned char),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (1)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (1)"));
     fclose(file);
     return NULL;
   }
   if(fseek(file,nbTypes*(sizeof(float)+(NAME_LENGTH+3)*sizeof(unsigned char)),SEEK_CUR)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (1)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (1)"));
     fclose(file);
     return NULL;
   }
   if(fread(&nbVariables,sizeof(unsigned char),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (2)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (2)"));
     fclose(file);
     return NULL;
   }
   if(fseek(file,(3+nbVariables)*NAME_LENGTH*sizeof(unsigned char),SEEK_CUR)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (2)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (2)"));
     fclose(file);
     return NULL;
   }
   if(fread(&nbParticles,sizeof(unsigned int),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (3)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (3)"));
     fclose(file);
     return NULL;
   }
   if(fseek(file,nbParticles*sizeof(unsigned char),SEEK_CUR)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (3)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (3)"));
     fclose(file);
     return NULL;
   }
@@ -107,29 +113,36 @@ Particles *loadParticlesPAR(QString &fileName){
     return NULL;
   }
   if(fread(&bRadius,sizeof(float),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (5)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (5)"));
     fclose(file);
     return NULL;
   }
   if(fseek(file,2*nbBonds*sizeof(unsigned int),SEEK_CUR)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (4)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (4)"));
     fclose(file);
     return NULL;
   }
   if(fread(&nbSteps,sizeof(unsigned int),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (6)"));
+    QMessageBox::warning(
+       NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (6)"));
     fclose(file);
     return NULL;
   }
   if(fseek(file,(1+(3+nbVariables)*nbParticles)*nbSteps*sizeof(float),SEEK_CUR)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (5)"));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (5)"));
     fclose(file);
     return NULL;
   }
   fpos=ftell(file);
   fseek(file,0,SEEK_END);
   if(fpos!=ftell(file)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. wrong file size. got %1 Bytes, expected %2 Bytes").arg(ftell(file)).arg(fpos));
+    QMessageBox::warning(
+        NULL,QObject::tr("Load Particles"),
+        QObject::tr("Corrupted File. wrong file size. got %1 Bytes, expected %2 Bytes").
+            arg(ftell(file)).arg(fpos));
     fclose(file);
     return NULL;
   }
@@ -221,7 +234,7 @@ Particles *loadParticlesPAR(QString &fileName){
 Particles *minMaxParticleCopy(Particles *par){
   Particles *particles=NULL;
   int i,j,k,m;
-	
+
   if(par!=NULL){
     particles=new Particles;
     particles->nbTypes = par->nbTypes;
@@ -252,7 +265,7 @@ Particles *minMaxParticleCopy(Particles *par){
       particles->time=NULL;
       particles->pPos=NULL;
     }
-		
+
     //set the min/max of time
     if(par->nbSteps>0)
       particles->time[0]=particles->time[1]=par->time[0];
@@ -282,8 +295,10 @@ Particles *minMaxParticleCopy(Particles *par){
               if(par->pType[k]==j){
                 for(m=0;m<par->nbSteps;m++){
                   if(par->pPos[m][k][0]!=INFINITY){
-                    particles->pPos[0][j][i]=par->pPos[m][k][i]<particles->pPos[0][j][i]?par->pPos[m][k][i]:particles->pPos[0][j][i];
-                    particles->pPos[1][j][i]=par->pPos[m][k][i]>particles->pPos[1][j][i]?par->pPos[m][k][i]:particles->pPos[1][j][i];
+                    particles->pPos[0][j][i]=par->pPos[m][k][i]<particles->pPos[0][j][i]?
+                        par->pPos[m][k][i]:particles->pPos[0][j][i];
+                    particles->pPos[1][j][i]=par->pPos[m][k][i]>particles->pPos[1][j][i]?
+                        par->pPos[m][k][i]:particles->pPos[1][j][i];
                   }
                 }
               }
@@ -303,20 +318,20 @@ void freeParticles(Particles *particles){
   if(particles==NULL)
     return;
   if(particles->pSpec!=NULL)    delete [] particles->pSpec;
-  if(particles->pType!=NULL)		delete [] particles->pType;
-  if(particles->time!=NULL)			delete [] particles->time;
+  if(particles->pType!=NULL)    delete [] particles->pType;
+  if(particles->time!=NULL)      delete [] particles->time;
   for(i=0;i<particles->nbBonds;i++)
-    if(particles->bonds[i]!=NULL)	delete [] particles->bonds[i];
-  if(particles->bonds!=NULL)		delete [] particles->bonds;
+    if(particles->bonds[i]!=NULL)  delete [] particles->bonds[i];
+  if(particles->bonds!=NULL)    delete [] particles->bonds;
   for(i=0;i<particles->nbSteps;i++){
     for(j=0;j<particles->nbParticles;j++)
-      if(particles->pPos[i][j]!=NULL)	delete [] particles->pPos[i][j];
-    if(particles->pPos[i]!=NULL)	delete [] particles->pPos[i];
+      if(particles->pPos[i][j]!=NULL)  delete [] particles->pPos[i][j];
+    if(particles->pPos[i]!=NULL)  delete [] particles->pPos[i];
   }
-  if(particles->pPos!=NULL)			delete [] particles->pPos;
+  if(particles->pPos!=NULL)      delete [] particles->pPos;
   for(i=0;i<3+particles->nbVariables;i++)
-    if(particles->varName[i]!=NULL)	delete [] particles->varName[i];
-  if(particles->varName!=NULL)	delete [] particles->varName;
+    if(particles->varName[i]!=NULL)  delete [] particles->varName[i];
+  if(particles->varName!=NULL)  delete [] particles->varName;
 }
 
 QColor getParticleColor(Particles *particles, int step, int pIndex){

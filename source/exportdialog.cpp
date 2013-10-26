@@ -13,21 +13,20 @@
 
 #include "gl2ps.h"
 
-ExportDialog::ExportDialog(GLWidget *widget, QWidget *parent)
-: QDialog(parent),glWidget(widget){
-  
+ExportDialog::ExportDialog(GLWidget *widget, QWidget *parent) : QDialog(parent),glWidget(widget){
+
   setWindowTitle(tr("Export"));
-  
+
   bar=new QProgressBar;
   bar->setValue(bar->minimum());
-  
+
   makeTimeGroupBox();
   makeSizeGroupBox();
   makeExportGroupBox();
   buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(exportScene()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-  
+
   QVBoxLayout *layout=new QVBoxLayout;
   layout->addWidget(timeOutGb);
   layout->addWidget(sizeOutGb);
@@ -65,31 +64,31 @@ void ExportDialog::makeTimeGroupBox(){
 }
 
 void ExportDialog::makeSizeGroupBox(){
-	QString path=qApp->arguments()[0];
-	int index;
-	if((index=path.lastIndexOf("\\"))>-1){
-		path.truncate(index+1);
-		path+=QString("images\\");
-	}
-	else if((index=path.lastIndexOf("/"))>-1){
-		path.truncate(index+1);
-		path+=QString("images/");
-	}
-	else{
-		#ifdef ROOTDIR
-		path=QString(ROOTDIR);
-		if((index=path.lastIndexOf("\\"))>-1){
-			if(index<path.size()-1) path+=QString("\\");
-			path+=QString("images\\");
-		}
-		else if((index=path.lastIndexOf("/"))>-1){
-			if(index<path.size()-1) path+=QString("/");
-			path+=QString("images/");
-		}
-		else
-		#endif
-		path=QString("./");
-	}
+  QString path=qApp->arguments()[0];
+  int index;
+  if((index=path.lastIndexOf("\\"))>-1){
+    path.truncate(index+1);
+    path+=QString("images\\");
+  }
+  else if((index=path.lastIndexOf("/"))>-1){
+    path.truncate(index+1);
+    path+=QString("images/");
+  }
+  else{
+    #ifdef ROOTDIR
+    path=QString(ROOTDIR);
+    if((index=path.lastIndexOf("\\"))>-1){
+      if(index<path.size()-1) path+=QString("\\");
+      path+=QString("images\\");
+    }
+    else if((index=path.lastIndexOf("/"))>-1){
+      if(index<path.size()-1) path+=QString("/");
+      path+=QString("images/");
+    }
+    else
+    #endif
+    path=QString("./");
+  }
   sizeOutGb=new QGroupBox("Output Size");
   QDoubleValidator *vd=new QDoubleValidator(this);
   QIntValidator *vi=new QIntValidator(this);
@@ -119,32 +118,32 @@ void ExportDialog::makeSizeGroupBox(){
   lockBt->setMinimumSize(20,20);
   lockBt->setIcon(unlockedIcon);
   QObject::connect(lockBt,SIGNAL(toggled(bool)),this,SLOT(updateIcon(bool)));
-	QPushButton *but320x240=new QPushButton(QString("320 x 240"));
-	QPushButton *but640x480=new QPushButton(QString("640 x 480"));
-	QPushButton *but800x600=new QPushButton(QString("800 x 600"));
-	QObject::connect(but320x240,SIGNAL(pressed()),this,SLOT(set320x240()));
-	QObject::connect(but640x480,SIGNAL(pressed()),this,SLOT(set640x480()));
-	QObject::connect(but800x600,SIGNAL(pressed()),this,SLOT(set800x600()));
+  QPushButton *but320x240=new QPushButton(QString("320 x 240"));
+  QPushButton *but640x480=new QPushButton(QString("640 x 480"));
+  QPushButton *but800x600=new QPushButton(QString("800 x 600"));
+  QObject::connect(but320x240,SIGNAL(pressed()),this,SLOT(set320x240()));
+  QObject::connect(but640x480,SIGNAL(pressed()),this,SLOT(set640x480()));
+  QObject::connect(but800x600,SIGNAL(pressed()),this,SLOT(set800x600()));
   QLabel *widthLb=new QLabel(tr("Width"));
   QLabel *heightLb=new QLabel(tr("Height"));
   QLabel *ratioLb=new QLabel(tr("Image Aspect"));
-	QGridLayout *gLayout=new QGridLayout;
-	gLayout->addWidget(widthLb,0,0);
-	gLayout->addWidget(widthLe,0,1);
-	gLayout->addWidget(but320x240,0,3);
-	gLayout->addWidget(but640x480,0,4);
-	gLayout->addWidget(heightLb,1,0);
-	gLayout->addWidget(heightLe,1,1);
-	gLayout->addWidget(but800x600,1,3);
-	gLayout->setColumnStretch(2,2);
-	gLayout->setColumnStretch(5,1);
+  QGridLayout *gLayout=new QGridLayout;
+  gLayout->addWidget(widthLb,0,0);
+  gLayout->addWidget(widthLe,0,1);
+  gLayout->addWidget(but320x240,0,3);
+  gLayout->addWidget(but640x480,0,4);
+  gLayout->addWidget(heightLb,1,0);
+  gLayout->addWidget(heightLe,1,1);
+  gLayout->addWidget(but800x600,1,3);
+  gLayout->setColumnStretch(2,2);
+  gLayout->setColumnStretch(5,1);
   QHBoxLayout *hLayout=new QHBoxLayout;
   hLayout->addWidget(ratioLb);
   hLayout->addWidget(ratioLe);
   hLayout->addWidget(lockBt);
   hLayout->addStretch(1);
   QVBoxLayout *vLayout=new QVBoxLayout;
-	vLayout->addLayout(gLayout);
+  vLayout->addLayout(gLayout);
   vLayout->addLayout(hLayout);
   sizeOutGb->setLayout(vLayout);
 }
@@ -220,19 +219,19 @@ void ExportDialog::ratioChanged(){
 }
 
 void ExportDialog::getBaseName(){
-  QString fileName = QFileDialog::getSaveFileName(this,QString(),QString(),
-											"PNG (*.png);;Bitmap (*.bmp);;PS (*.ps);;EPS (*.eps);;PDF (*.pdf)");
+  QString fileName = QFileDialog::getSaveFileName(
+      this,QString(),QString(),"PNG (*.png);;Bitmap (*.bmp);;PS (*.ps);;EPS (*.eps);;PDF (*.pdf)");
   baseNLe->setText(fileName);
 }
 
 void ExportDialog::exportScene(){
   QString ext[]={".bmp",".png",".ps",".eps",".pdf"};
-	int extLength[]={4,4,3,4,4};
+  int extLength[]={4,4,3,4,4};
   char *format[]={(char*)("BMP"),(char*)("PNG")};
-	GLint format_GL2PS[]={GL2PS_PS,GL2PS_EPS,GL2PS_PDF};
+  GLint format_GL2PS[]={GL2PS_PS,GL2PS_EPS,GL2PS_PDF};
   int k,size,step;
-	int numFormat=5,numWithQt=2;
-	
+  int numFormat=5,numWithQt=2;
+
   size=baseNLe->text().size();
   if(!baseNLe->text().isEmpty()){
     for(k=0;k<numFormat;k++){
@@ -243,14 +242,14 @@ void ExportDialog::exportScene(){
       int min=0,max=0;
       int width=widthLe->text().toInt();
       int height=heightLe->text().toInt();
-			int glWidth,glHeight;
+      int glWidth,glHeight;
       QPixmap pixmap;
       QString fileName;
       QString baseName=baseNLe->text();
-			baseName.truncate(size-extLength[k]);
-			glWidth=glWidget->width();
-			glHeight=glWidget->height();
-			glWidget->resizegl(width,height);
+      baseName.truncate(size-extLength[k]);
+      glWidth=glWidget->width();
+      glHeight=glWidget->height();
+      glWidget->resizegl(width,height);
       if(radioSingle->isChecked())
         min=max=glWidget->getStep();
       else if(radioAll->isChecked()){
@@ -264,55 +263,55 @@ void ExportDialog::exportScene(){
       bar->setRange(min,max);
       if(min==max)
         bar->setMinimum(min-1);
-			if(k<numWithQt){
+      if(k<numWithQt){
         glWidget->enableGlList(false);
-				QFile file("");
-				for(step=min;step<=max;step++){
-					bar->setValue(step);
-					fileName=baseName;
-					fileName.append(QString("_%1").arg(step,4,10,QChar('0')));
-					fileName.append(ext[k]);
-					glWidget->goToStep(step);
-					pixmap=glWidget->renderPixmap(width,height);
-					file.setFileName(fileName);
-					file.open(QFile::WriteOnly);
-					pixmap.save(&file,format[k]);
-					file.close();
-				}
+        QFile file("");
+        for(step=min;step<=max;step++){
+          bar->setValue(step);
+          fileName=baseName;
+          fileName.append(QString("_%1").arg(step,4,10,QChar('0')));
+          fileName.append(ext[k]);
+          glWidget->goToStep(step);
+          pixmap=glWidget->renderPixmap(width,height);
+          file.setFileName(fileName);
+          file.open(QFile::WriteOnly);
+          pixmap.save(&file,format[k]);
+          file.close();
+        }
         glWidget->enableGlList(true);
       }
-			else{ // with GL2PS
-				FILE *pFile;
-				char fileN[256];
-				int i,state,buffsize;
-				glShadeModel(GL_FLAT);
-				for(step=min;step<=max;step++){
-					state=GL2PS_OVERFLOW;
-					buffsize=0;
-					bar->setValue(step);
-					fileName=baseName;
-					fileName.append(QString("_%1").arg(step,4,10,QChar('0')));
-					fileName.append(ext[k]);
-					for(i=0;i<fileName.size();i++)
-						fileN[i]=fileName[i].toAscii();
-					fileN[i]='\0';
-					pFile=fopen(fileN,"wb");
-					while(state == GL2PS_OVERFLOW){
-						buffsize += 1024*1024;
-						gl2psBeginPage("Export", "MoleculeV", NULL, format_GL2PS[k-numWithQt], GL2PS_SIMPLE_SORT, 
-													 GL2PS_DRAW_BACKGROUND | GL2PS_USE_CURRENT_VIEWPORT | GL2PS_OCCLUSION_CULL, 
-													 GL_RGBA, 0, NULL, 10, 10, 10, buffsize, pFile, fileN);
-						if(step==glWidget->getStep())
-							glWidget->updateGL();
-						else
-							glWidget->goToStep(step);
-						state=gl2psEndPage();
-					}
-					fclose(pFile);
-				}
-				glShadeModel(GL_SMOOTH);
-			}
-			glWidget->resizegl(glWidth,glHeight);
+      else{ // with GL2PS
+        FILE *pFile;
+        char fileN[256];
+        int i,state,buffsize;
+        glShadeModel(GL_FLAT);
+        for(step=min;step<=max;step++){
+          state=GL2PS_OVERFLOW;
+          buffsize=0;
+          bar->setValue(step);
+          fileName=baseName;
+          fileName.append(QString("_%1").arg(step,4,10,QChar('0')));
+          fileName.append(ext[k]);
+          for(i=0;i<fileName.size();i++)
+            fileN[i]=fileName[i].toAscii();
+          fileN[i]='\0';
+          pFile=fopen(fileN,"wb");
+          while(state == GL2PS_OVERFLOW){
+            buffsize += 1024*1024;
+            gl2psBeginPage("Export", "MoleculeV", NULL, format_GL2PS[k-numWithQt], GL2PS_SIMPLE_SORT,
+                           GL2PS_DRAW_BACKGROUND | GL2PS_USE_CURRENT_VIEWPORT | GL2PS_OCCLUSION_CULL,
+                           GL_RGBA, 0, NULL, 10, 10, 10, buffsize, pFile, fileN);
+            if(step==glWidget->getStep())
+              glWidget->updateGL();
+            else
+              glWidget->goToStep(step);
+            state=gl2psEndPage();
+          }
+          fclose(pFile);
+        }
+        glShadeModel(GL_SMOOTH);
+      }
+      glWidget->resizegl(glWidth,glHeight);
       QMessageBox::information(this,"Export","Done!");
       accept();
     }
@@ -321,19 +320,19 @@ void ExportDialog::exportScene(){
 
 
 void ExportDialog::set320x240(){
-	widthLe->setText(QString("%1").arg(320));
-	heightLe->setText(QString("%1").arg(240));
+  widthLe->setText(QString("%1").arg(320));
+  heightLe->setText(QString("%1").arg(240));
   ratioLe->setText(QString("%1").arg(4./3.));
 }
 
 void ExportDialog::set640x480(){
-	widthLe->setText(QString("%1").arg(640));
-	heightLe->setText(QString("%1").arg(480));
+  widthLe->setText(QString("%1").arg(640));
+  heightLe->setText(QString("%1").arg(480));
   ratioLe->setText(QString("%1").arg(4./3.));
 }
 
 void ExportDialog::set800x600(){
-	widthLe->setText(QString("%1").arg(800));
-	heightLe->setText(QString("%1").arg(600));
+  widthLe->setText(QString("%1").arg(800));
+  heightLe->setText(QString("%1").arg(600));
   ratioLe->setText(QString("%1").arg(4./3.));
 }

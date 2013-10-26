@@ -12,7 +12,8 @@ GLdouble v2[4],v3[4]; //test. to be removed!!!
 typedef struct _Image{
   unsigned int width;
   unsigned int height;
-  unsigned char (*data)[3]; // image data (RGB, stored from left to right, top to bottom ->data[0]=top left corner)
+  unsigned char (*data)[3]; // image data (RGB, stored from left to right, top to bottom.
+                            // data[0]=top left corner)
 } Image;
 Image* loadBMP(char *fileName);
 
@@ -35,6 +36,7 @@ static GLdouble* multMatrixd441(GLdouble *m1, GLdouble *m2, GLdouble *dest);
 static int getStreamSize(const char *stream, int charWidth[95]){
   int len=0;
   const char *c=stream;
+
   while(*c!='\0')
     if(*c>=0x20 && *c<=0x7E)
       len+=charWidth[(*c++)-0x20];
@@ -1604,7 +1606,7 @@ void GLWidget::printScr(int x, int y, const char *format, ...){
 }
 
 void GLWidget::updateTimeStr(int theStep){
-  static char unit[8][3]={"ps","ns","µs","ms","s ","m ","h ","d "};
+  static char unit[8][3]={"ps","ns","us","ms","s ","m ","h ","d "};
   if(particles!=NULL){
     if(theStep>=0 && theStep<particles->nbSteps){
       float t=particles->time[theStep]*1e12;

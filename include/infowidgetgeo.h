@@ -10,39 +10,39 @@
 #include "geometry.h"
 
 class InfoWidgetGeo : public QGroupBox{
-  
-	Q_OBJECT
-	
+
+  Q_OBJECT
+
 public:
-	InfoWidgetGeo(MyGeometry *geom=0, QWidget *parent=0);
-	void loadGeometry(MyGeometry *geom);
-	
+  InfoWidgetGeo(MyGeometry *geom=0, QWidget *parent=0);
+  void loadGeometry(MyGeometry *geom);
+
 signals:
-	void geometryChanged();
-	
+  void geometryChanged();
+
 private slots:
-	void setGeo(int geo);
-	void changeActiveGeo(bool enable);
-	void changeColor();
-	void changeTransparence();
-	
+  void setGeo(int geo);
+  void changeActiveGeo(bool enable);
+  void changeColor();
+  void changeTransparence();
+
 private:
   void enableWidgets();
-	
+
 private:
-	MyGeometry  *geometry;
+  MyGeometry  *geometry;
   int         nbObj;
-	int         nbBoxes;
-	int         nbCylinders;
-	int         nbSpheres;
-	int         nbLines;
-	int         nbMeshes;
-	QLabel      *colorLb;
-	QLabel      *transpLb;
-	QCheckBox   *activeGeoBx;
-	QComboBox   *geoBx;
-	QPushButton *selColorBt;
-	QSlider     *transpSl;
+  int         nbBoxes;
+  int         nbCylinders;
+  int         nbSpheres;
+  int         nbLines;
+  int         nbMeshes;
+  QLabel      *colorLb;
+  QLabel      *transpLb;
+  QCheckBox   *activeGeoBx;
+  QComboBox   *geoBx;
+  QPushButton *selColorBt;
+  QSlider     *transpSl;
 };
 
 #endif

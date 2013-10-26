@@ -8,22 +8,22 @@
 #include "mycolor.h"
 
 class InfoWidgetBgd : public QGroupBox{
-	
-	Q_OBJECT
-	
+
+  Q_OBJECT
+
 public:
-	InfoWidgetBgd(QWidget *parent=0);
-	
+  InfoWidgetBgd(QWidget *parent=0);
+
 signals:
-	void backgroundChanged(MyColor);
-  
+  void backgroundChanged(MyColor);
+
 private slots:
-	void changeColor();
-	
+  void changeColor();
+
 private:
-  MyColor bgColor;
-	QLabel  *colorLb;
-	QPushButton *selColorBt;
+  MyColor     bgColor;
+  QLabel      *colorLb;
+  QPushButton *selColorBt;
 };
 
 #endif
