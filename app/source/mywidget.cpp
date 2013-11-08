@@ -1,57 +1,20 @@
 #include "mywidget.h"
+#include "images.h"
 #include <QFile>
 #include <QTextStream>
 #include <QList>
 #include <QVBoxLayout>
 #include <QApplication>
 
-/*returns the path of the executable.
- * if folder!=NULL, append folder to the path,
- * including separator.*/
-QString getPath(const char *folder){
-  QString path=qApp->arguments()[0];
-  char separator;
-  int index;
-  if((index=path.lastIndexOf("\\"))>-1){
-    path.truncate(index+1);
-    separator='\\';
-  }
-  else if((index=path.lastIndexOf("/"))>-1){
-    path.truncate(index+1);
-    separator='/';
-  }
-  else{
-    path=QString("./");
-    separator='/';
-    #ifdef ROOTDIR
-    path=QString(ROOTDIR);
-    if((index=path.lastIndexOf("\\"))>-1){
-      if(index<path.size()-1)
-        path+=QString("\\");
-      separator='\\';
-    }
-    else if((index=path.lastIndexOf("/"))>-1){
-      if(index<path.size()-1)
-        path+=QString("/");
-      separator='/';
-    }
-    else
-    #endif
-  }
-  if(folder){
-    path+=folder;
-    path+=separator;
-  }
-  return path;
-}
-
 MyWidget::MyWidget(QWidget *parent):QWidget(parent){
 
-  QString path;
-  path=getPath("images");
-  playIcon=QIcon(path+"play.png");
-  pauseIcon=QIcon(path+"pause.png");
-  stopIcon=QIcon(path+"stop.png");
+  QPixmap playPixmap, pausePixmap, stopPixmap;
+  playPixmap.loadFromData(PLAY_PNG, sizeof(PLAY_PNG));
+  pausePixmap.loadFromData(PAUSE_PNG, sizeof(PAUSE_PNG));
+  stopPixmap.loadFromData(STOP_PNG, sizeof(STOP_PNG));
+  playIcon=QIcon(playPixmap);
+  pauseIcon=QIcon(pausePixmap);
+  stopIcon=QIcon(stopPixmap);
   particles=NULL;
   geometry=NULL;
   isPlaying=false;
@@ -65,20 +28,26 @@ MyWidget::MyWidget(QWidget *parent):QWidget(parent){
   rotateDialog = new RotateDialog(this);
   blankingDialog = new BlankingDialog(this);
   trajectoryDialog = new TrajectoryDialog(this);
-  textDialog = new TextDialog(getPath("fonts"),this);
+  textDialog = new TextDialog(this);
   glWidget->getRotAngles(xRot,yRot,zRot);
   glWidget->getCenterSc(xCen,yCen,zCen);
-  glWidget->setFontPath(getPath("fonts").toAscii().data());
   rotateDialog->setRotAngles(xRot,yRot,zRot);
   rotateDialog->setCenter(xCen,yCen,zCen);
-  QObject::connect(glWidget,SIGNAL(rotAnglesChanged(float,float,float)),rotateDialog,SLOT(setRotAngles(float,float,float)));
-  QObject::connect(rotateDialog,SIGNAL(rotAnglesChanged(float,float,float)),glWidget,SLOT(setRotAngles(float,float,float)));
-  QObject::connect(glWidget,SIGNAL(centerChanged(float,float,float)),rotateDialog,SLOT(setCenter(float,float,float)));
-  QObject::connect(rotateDialog,SIGNAL(centerChanged(float,float,float)),glWidget,SLOT(setCenter(float,float,float)));
+  QObject::connect(glWidget,SIGNAL(rotAnglesChanged(float,float,float)),
+                   rotateDialog,SLOT(setRotAngles(float,float,float)));
+  QObject::connect(rotateDialog,SIGNAL(rotAnglesChanged(float,float,float)),
+                   glWidget,SLOT(setRotAngles(float,float,float)));
+  QObject::connect(glWidget,SIGNAL(centerChanged(float,float,float)),
+                   rotateDialog,SLOT(setCenter(float,float,float)));
+  QObject::connect(rotateDialog,SIGNAL(centerChanged(float,float,float))
+                   ,glWidget,SLOT(setCenter(float,float,float)));
   QObject::connect(rotateDialog,SIGNAL(resetCenter()),glWidget,SLOT(center()));
-  QObject::connect(blankingDialog,SIGNAL(blankChanged(int,Blank)),glWidget,SLOT(setBlank(int,Blank)));
-  QObject::connect(trajectoryDialog,SIGNAL(animTraChanged(bool)),glWidget,SLOT(setAnimTrajectory(bool)));
-  QObject::connect(trajectoryDialog,SIGNAL(trajectoryChanged(int,Trajectory)),glWidget,SLOT(setTrajectory(int,Trajectory)));
+  QObject::connect(blankingDialog,SIGNAL(blankChanged(int,Blank)),
+                   glWidget,SLOT(setBlank(int,Blank)));
+  QObject::connect(trajectoryDialog,SIGNAL(animTraChanged(bool)),
+                   glWidget,SLOT(setAnimTrajectory(bool)));
+  QObject::connect(trajectoryDialog,SIGNAL(trajectoryChanged(int,Trajectory)),
+                   glWidget,SLOT(setTrajectory(int,Trajectory)));
   QObject::connect(glWidget,SIGNAL(initializationDone()),this,SLOT(setDefaultFont()));
   QObject::connect(textDialog,SIGNAL(showTextChanged(bool)),glWidget,SLOT(setShowText(bool)));
   QObject::connect(textDialog,SIGNAL(colorChanged(QColor)),glWidget,SLOT(updateTextColor(QColor)));

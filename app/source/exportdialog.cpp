@@ -1,4 +1,5 @@
 #include "exportdialog.h"
+#include "images.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -62,31 +63,6 @@ void ExportDialog::makeTimeGroupBox(){
 }
 
 void ExportDialog::makeSizeGroupBox(){
-  QString path=qApp->arguments()[0];
-  int index;
-  if((index=path.lastIndexOf("\\"))>-1){
-    path.truncate(index+1);
-    path+=QString("images\\");
-  }
-  else if((index=path.lastIndexOf("/"))>-1){
-    path.truncate(index+1);
-    path+=QString("images/");
-  }
-  else{
-    #ifdef ROOTDIR
-    path=QString(ROOTDIR);
-    if((index=path.lastIndexOf("\\"))>-1){
-      if(index<path.size()-1) path+=QString("\\");
-      path+=QString("images\\");
-    }
-    else if((index=path.lastIndexOf("/"))>-1){
-      if(index<path.size()-1) path+=QString("/");
-      path+=QString("images/");
-    }
-    else
-    #endif
-    path=QString("./");
-  }
   sizeOutGb=new QGroupBox("Output Size");
   QDoubleValidator *vd=new QDoubleValidator(this);
   QIntValidator *vi=new QIntValidator(this);
@@ -107,8 +83,11 @@ void ExportDialog::makeSizeGroupBox(){
   ratioLe->setFixedWidth(70);
   ratioLe->setAlignment(Qt::AlignRight);
   QObject::connect(ratioLe,SIGNAL(editingFinished()),this,SLOT(ratioChanged()));
-  lockedIcon=QIcon(path+QString("locked.png"));
-  unlockedIcon=QIcon(path+QString("unlocked.png"));
+  QPixmap lockedPixmap, unlockedPixmap;
+  lockedPixmap.loadFromData(LOCKED_PNG, sizeof(LOCKED_PNG));
+  unlockedPixmap.loadFromData(UNLOCKED_PNG, sizeof(UNLOCKED_PNG));
+  lockedIcon=QIcon(lockedPixmap);
+  unlockedIcon=QIcon(unlockedPixmap);
   lockBt=new QPushButton;
   lockBt->setCheckable(true);
   lockBt->setChecked(false);

@@ -1,4 +1,5 @@
 #include "glwidget.h"
+#include "fonts.h"
 #include <QColor>
 #include <QtGui>
 #include <QtOpenGL>
@@ -15,7 +16,7 @@ typedef struct _Image{
   unsigned char (*data)[3]; // image data (RGB, stored from left to right, top to bottom.
                             // data[0]=top left corner)
 } Image;
-Image* loadBMP(char *fileName);
+Image* loadBMP(unsigned char *fdata);
 
 //forward declaration of static functions
 static int getStreamSize(const char *stream, int charWidth[95]);
@@ -285,10 +286,6 @@ GLWidget::GLWidget(QWidget *parent) :
   //test:
   v2[0]=v2[1]=v2[2]=v2[3]=0;
   v3[0]=v3[1]=v3[2]=v3[3]=0;
-}
-
-GLWidget::~GLWidget(){
-  delete [] fontPath;
 }
 
 void GLWidget::initializeGL(){
@@ -1377,10 +1374,19 @@ float* GLWidget::getMinMax(){
   return out;
 }
 
+/*return data[0]+data[1]<<8+...+data[nbytes-1]<<(8*(nbytes-1)). data is incremented.*/
+static unsigned int extractData(unsigned char **data, int nbytes){
+  unsigned int out;
+  int i, offset=0;
+
+  for(i=0, out=0; i<nbytes; i++, offset+=8)
+    out|=(*(*data)++)<<offset;
+  return out;
+}
+
 /*reads a .bmp file and returns an Image structure containing the pixels*/
-Image* loadBMP(char *fileName){
+Image* loadBMP(unsigned char *fdata){
   Image *im=NULL;
-  FILE  *pFile;
   struct {
     unsigned char  id[2];     // should be "BM"
     unsigned int   size;      // file size
@@ -1401,39 +1407,34 @@ Image* loadBMP(char *fileName){
     unsigned int   numColorPalette;
     unsigned int   numImportantColor;
   } infoHeader;
-  unsigned int check;
   long   rowOffset;
   unsigned char (*data)[3],tmp;
 
-  pFile=fopen(fileName,"rb");
-  if(pFile==NULL)
-    return NULL;
-
   // read BMP header
-  check =fread(&(header.id),1,2,pFile);
-  check+=fread(&(header.size),4,1,pFile);
-  check+=fread(&(header.reserved1),2,1,pFile);
-  check+=fread(&(header.reserved2),2,1,pFile);
-  check+=fread(&(header.offset),4,1,pFile);
-  if(check!=6 || header.offset!=54)
+  header.id[0]=*fdata++;
+  header.id[1]=*fdata++;
+  header.size=extractData(&fdata, 4);
+  header.reserved1=extractData(&fdata, 2);
+  header.reserved2=extractData(&fdata, 2);
+  header.offset=extractData(&fdata, 4);
+  if(header.offset!=54)
     return NULL;
 
   // read BMP info header
-  check =fread(&(infoHeader.headerSize),4,1,pFile);
-  check+=fread(&(infoHeader.width),4,1,pFile);
-  check+=fread(&(infoHeader.height),4,1,pFile);
-  check+=fread(&(infoHeader.numColorPlanes),2,1,pFile);
-  check+=fread(&(infoHeader.bitsPerPixel),2,1,pFile);
-  check+=fread(&(infoHeader.compression),4,1,pFile);
-  check+=fread(&(infoHeader.imageSize),4,1,pFile);
-  check+=fread(&(infoHeader.hResolution),4,1,pFile);
-  check+=fread(&(infoHeader.vResolution),4,1,pFile);
-  check+=fread(&(infoHeader.numColorPalette),4,1,pFile);
-  check+=fread(&(infoHeader.numImportantColor),4,1,pFile);
-  if(check!=11 || infoHeader.headerSize!=40 || infoHeader.numColorPlanes!=1
-      || infoHeader.compression!=0 || infoHeader.numColorPalette!=0)
+  infoHeader.headerSize=extractData(&fdata, 4);
+  infoHeader.width=extractData(&fdata, 4);
+  infoHeader.height=extractData(&fdata, 4);
+  infoHeader.numColorPlanes=extractData(&fdata, 2);
+  infoHeader.bitsPerPixel=extractData(&fdata, 2);
+  infoHeader.compression=extractData(&fdata, 4);
+  infoHeader.imageSize=extractData(&fdata, 4);
+  infoHeader.hResolution=extractData(&fdata, 4);
+  infoHeader.vResolution=extractData(&fdata, 4);
+  infoHeader.numColorPalette=extractData(&fdata, 4);
+  infoHeader.numImportantColor=extractData(&fdata, 4);
+  if(infoHeader.headerSize!=40 || infoHeader.numColorPlanes!=1 ||
+     infoHeader.compression!=0 || infoHeader.numColorPalette!=0)
     return NULL;
-
   // read data
   im=(Image*)calloc(1,sizeof(Image));
   im->height=abs(infoHeader.height);
@@ -1442,14 +1443,14 @@ Image* loadBMP(char *fileName){
   rowOffset=(4-((im->width*3)&3))&3; // &3 <=> %4
   if(infoHeader.height<0){
     for(data=im->data;data<im->data+im->width*im->height;data+=im->width){
-      fread(data,sizeof(unsigned char[3]),im->width,pFile);
-      fseek(pFile,rowOffset,SEEK_CUR);
+      memcpy(data, fdata, 3*im->width);
+      fdata+=3*im->width+rowOffset;
     }
   }
   else{
     for(data=im->data+im->width*(im->height-1);data>=im->data;data-=im->width){
-      fread(data,sizeof(unsigned char[3]),im->width,pFile);
-      fseek(pFile,rowOffset,SEEK_CUR);
+      memcpy(data, fdata, 3*im->width);
+      fdata+=3*im->width+rowOffset;
     }
   }
   for(data=im->data;data<im->data+im->width*im->height;data++){
@@ -1458,45 +1459,42 @@ Image* loadBMP(char *fileName){
     (*data)[2]=tmp;
   }
 
-  fclose(pFile);
   return im;
 }
 
-void GLWidget::setFontPath(char *path){
-  fontPath=(char*)calloc(strlen(path)+1,sizeof(char));
-  strcpy(fontPath,path);
-}
-
-/*create fontList from the .bmp file given in path, containing the representation*/
+/*create fontList from the BMP file located at fontBmp, containing the representation*/
 /*of 95 ASCII characters, starting from the space (0x20) and ending with '~' (0x7E)*/
 /*the corresponding .txt file contains the size of each character*/
 /*The corresponding .txt file must have the same name. Only the extension changes.*/
 /*the origin for each character is located at the bottom left corner*/
-void GLWidget::loadFont(char *font){
-  FILE *pFile;
-  char *fontTxt,*fontBmp;
+void GLWidget::loadFont(char *fontBmp){
+  char *fontTxt;
   Image *im;
   int rowOffset,colOffset;
-  int c,i,j;
+  int c,i,j,indexBmp,indexTxt;
 
   // first, check if .bmp and .txt file exist.
-  fontBmp=new char[strlen(fontPath)+strlen(font)+1];
-  strcpy(fontBmp,fontPath);
-  strcat(fontBmp,font);
+  for(indexBmp=0; indexBmp<(int)(sizeof(FONTS_FILE_NAMES)/sizeof(*FONTS_FILE_NAMES)); indexBmp++){
+    if(!strcmp(fontBmp, FONTS_FILE_NAMES[indexBmp]))
+      break;
+  }
+  if(indexBmp==(int)(sizeof(FONTS_FILE_NAMES)/sizeof(*FONTS_FILE_NAMES)))
+    return;
   fontTxt=new char[strlen(fontBmp)+1];
   strcpy(fontTxt,fontBmp);
   strcpy(fontTxt+strlen(fontTxt)-3,"txt");
-  pFile=fopen(fontTxt,"r");
-  delete [] fontTxt;
-  if(pFile==NULL){
-    delete [] fontBmp;
-    return;
+  for(indexTxt=0; indexTxt<(int)(sizeof(FONTS_FILE_NAMES)/sizeof(*FONTS_FILE_NAMES)); indexTxt++){
+    if(!strcmp(fontTxt, FONTS_FILE_NAMES[indexTxt]))
+      break;
   }
+  delete [] fontTxt;
+  if(indexTxt==(int)(sizeof(FONTS_FILE_NAMES)/sizeof(*FONTS_FILE_NAMES)))
+    return;
+
+  fontTxt=(char*)FONTS_FILE_DATA[indexTxt];
   for(c=0;c<95;c++)
-    fscanf(pFile,"%d",&(charWidth[c]));
-  fclose(pFile);
-  im=loadBMP(fontBmp);
-  delete [] fontBmp;
+    charWidth[c]=strtol(fontTxt, &fontTxt, 10);
+  im=loadBMP(FONTS_FILE_DATA[indexBmp]);
   if(im==NULL)
     return;
   charHeight=im->height/3;

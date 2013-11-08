@@ -21,7 +21,6 @@ class GLWidget : public QGLWidget
 
 public:
   GLWidget(QWidget *parent = 0);
-  ~GLWidget();
   void zoomFit();
   void loadParticles(Particles *part);
   void clearParticles();
@@ -33,7 +32,6 @@ public:
   void getRotAngles(float &rx, float &ry, float &rz){rx=xRot/16.;ry=yRot/16.;rz=zRot/16.;}
   void getCenterSc(float &cx, float &cy, float &cz){cx=-xCenterSc;cy=-yCenterSc;cz=-zCenterSc;}
   void updateFps(int fps);
-  void setFontPath(char *path);
 
 signals:
   void initializationDone();
@@ -132,7 +130,6 @@ private:
   int      (**fontPixelsPos)[2];
   int      *fontPixelsNum;
   float    fontColor[3];
-  char     *fontPath;
   int      timeXPos,timeYPos;
   char     timeStr[100];
   bool     showText;

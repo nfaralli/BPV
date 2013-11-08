@@ -20,7 +20,7 @@ class TextDialog : public QDialog {
 Q_OBJECT
 
 public:
-  TextDialog(QString fPath, QWidget *parent = 0);
+  TextDialog(QWidget *parent = 0);
   QString getFont();
 
 signals:
@@ -43,7 +43,6 @@ private:
   QComboBox          *fontCB;
   QComboBox          *sizeCB;
   QDialogButtonBox   *closeBB;
-  QString            fontPath;
   QString            currentFont;
   QStringList        fontList;
   QList<QList<int> > sizeList;

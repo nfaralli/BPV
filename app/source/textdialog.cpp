@@ -1,4 +1,5 @@
 #include "textdialog.h"
+#include "fonts.h"
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -9,11 +10,10 @@
 #include <QStringList>
 
 
-TextDialog::TextDialog(QString fPath, QWidget *parent) :
+TextDialog::TextDialog(QWidget *parent) :
   QDialog(parent){
   setWindowTitle(tr("Text"));
 
-  fontPath=fPath;
   currentFont="";
 
   textColor = Qt::white;
@@ -64,15 +64,20 @@ TextDialog::TextDialog(QString fPath, QWidget *parent) :
 }
 
 void TextDialog::findFonts(){
+  QStringList bmpFiles, txtFiles;
   int  i, index, indexList, fontSize;
   bool ok;
 
-  QDir fontDir(fontPath);
-  QStringList bmpFiles=fontDir.entryList(QStringList("*.bmp"),QDir::Files,QDir::Name);
+  for(i=0; i<(int)(sizeof(FONTS_FILE_NAMES)/sizeof(*FONTS_FILE_NAMES)); i++){
+    if(QString(FONTS_FILE_NAMES[i]).contains(".bmp"))
+      bmpFiles.append(FONTS_FILE_NAMES[i]);
+    else if(QString(FONTS_FILE_NAMES[i]).contains(".txt"))
+      txtFiles.append(FONTS_FILE_NAMES[i]);
+  }
   for(i=0;i<bmpFiles.size();i++){
     QString bmpFile=bmpFiles.at(i);
     bmpFile.chop(4);//removes ".bmp"
-    if(!fontDir.exists(bmpFile+".txt")) //check if corresponding .txt file exists
+    if(!txtFiles.contains(bmpFile+".txt")) //check if corresponding .txt file exists
       continue;
     index=bmpFile.lastIndexOf('_');
     if(index==-1)
