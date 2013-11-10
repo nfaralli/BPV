@@ -74,4 +74,5 @@ win*{
 else{
   cleangen.commands = -$(DEL_FILE) source_gen/fonts.cpp source_gen/images.cpp include_gen/fonts.h include_gen/images.h
 }
-QMAKE_EXTRA_TARGETS += cleangen
+distclean.depends = cleangen
+QMAKE_EXTRA_TARGETS += cleangen distclean
