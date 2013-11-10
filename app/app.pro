@@ -1,6 +1,7 @@
 TEMPLATE = app
 DESTDIR = ../bin
 TARGET = bpv
+CONFIG -= app_bundle
 QT += core \
     gui \
     opengl
@@ -66,3 +67,11 @@ SOURCES += source/textdialog.cpp \
     source_gen/fonts.cpp
 INCLUDEPATH += ./include \
     ./include_gen
+
+win*{
+  cleangen.commands = -$(DEL_FILE) source_gen\\fonts.cpp source_gen\\images.cpp include_gen\\fonts.h include_gen\\images.h
+}
+else{
+  cleangen.commands = -$(DEL_FILE) source_gen/fonts.cpp source_gen/images.cpp include_gen/fonts.h include_gen/images.h
+}
+QMAKE_EXTRA_TARGETS += cleangen
