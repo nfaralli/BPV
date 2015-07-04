@@ -59,7 +59,7 @@ public slots:
   void setAllPartSpec(PartSpec*);
   void setBondSpec(BondSpec);
   void resetGeometry();
-  void loadFont(char *font);
+  void loadFont(const char *font);
 
 protected:
   void initializeGL();

@@ -1,0 +1,8 @@
+Makefile*
+include_gen
+source_gen
+debug
+release
+bin
+object_script*
+*.user

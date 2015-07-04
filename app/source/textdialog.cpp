@@ -146,5 +146,5 @@ void TextDialog::updateSizeCB(){
 void TextDialog::updateCurrentFont(){
   currentFont=fontCB->currentText()+"_"+sizeCB->currentText()+".bmp";
   if(enableFontChangedSig)
-    emit fontChanged(currentFont.toAscii().data());
+    emit fontChanged(currentFont.toStdString().data());
 }

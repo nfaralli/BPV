@@ -1467,7 +1467,7 @@ Image* loadBMP(unsigned char *fdata){
 /*the corresponding .txt file contains the size of each character*/
 /*The corresponding .txt file must have the same name. Only the extension changes.*/
 /*the origin for each character is located at the bottom left corner*/
-void GLWidget::loadFont(char *fontBmp){
+void GLWidget::loadFont(const char *fontBmp){
   char *fontTxt;
   Image *im;
   int rowOffset,colOffset;

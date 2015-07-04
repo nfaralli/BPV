@@ -26,7 +26,7 @@ public:
 signals:
   void showTextChanged(bool);
   void colorChanged(QColor);
-  void fontChanged(char*);
+  void fontChanged(const char*);
 
 private slots:
   void changeColor();

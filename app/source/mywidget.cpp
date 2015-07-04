@@ -51,7 +51,7 @@ MyWidget::MyWidget(QWidget *parent):QWidget(parent){
   QObject::connect(glWidget,SIGNAL(initializationDone()),this,SLOT(setDefaultFont()));
   QObject::connect(textDialog,SIGNAL(showTextChanged(bool)),glWidget,SLOT(setShowText(bool)));
   QObject::connect(textDialog,SIGNAL(colorChanged(QColor)),glWidget,SLOT(updateTextColor(QColor)));
-  QObject::connect(textDialog,SIGNAL(fontChanged(char*)),glWidget,SLOT(loadFont(char*)));
+  QObject::connect(textDialog,SIGNAL(fontChanged(const char*)),glWidget,SLOT(loadFont(const char*)));
   playBt = new QPushButton();
   playBt->setIcon(playIcon);
   playBt->setEnabled(false);
@@ -228,5 +228,5 @@ void MyWidget::keyPressEvent(QKeyEvent *event){
 }
 
  void MyWidget::setDefaultFont(){
-   glWidget->loadFont(textDialog->getFont().toAscii().data());
+   glWidget->loadFont(textDialog->getFont().toStdString().data());
  }

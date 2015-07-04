@@ -11,6 +11,21 @@ static Geosphere* getIcosahedron(float radius);
 static void       relaxGeosphere(Geosphere *geo);
 static Geosphere* getGeosphere(Geosphere *geoIni, int nbSegs);
 
+/*
+ * Computes the determinent of a 4x4 transformation matrix,
+ * assuming the last row is [0, 0, 0, 1].
+ */
+float determinent(GLfloat *m) {
+  if(m == NULL) {
+    return 0;
+  }
+  float det;
+  det  = m[0]*(m[5]*m[10] - m[6]*m[9]);
+  det += m[1]*(m[6]*m[8] - m[4]*m[10]);
+  det += m[2]*(m[4]*m[9] - m[5]*m[8]);
+  return det;
+}
+
 /*draw a box according to the structure MyBox*/
 void drawBox(MyBox &box){
   GLfloat diffuseColor[4];
@@ -18,6 +33,7 @@ void drawBox(MyBox &box){
   float dx,dy,dz;
   int i,j,k;
   GLfloat matrix[16];
+  float det;
 
   glEnable(GL_NORMALIZE);
   for(k=0;k<4;k++)
@@ -25,6 +41,7 @@ void drawBox(MyBox &box){
   glMaterialfv(GL_FRONT,GL_DIFFUSE,diffuseColor);
   for(k=0;k<16;k++)
     matrix[k]=box.transform[k];
+  det=determinent(matrix);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(matrix);
@@ -36,10 +53,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.lengthsegs;i++){
     y=box.length/2-i*dy;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.widthsegs+1;j++){
-      x=-box.width/2+j*dx;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y-dy,z);
+    if(det>=0){
+      for(j=0;j<box.widthsegs+1;j++){
+        x=-box.width/2+j*dx;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y-dy,z);
+      }
+    } else {
+      for(j=0;j<box.widthsegs+1;j++){
+        x=-box.width/2+j*dx;
+        glVertex3f(x,y-dy,z);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -48,10 +73,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.lengthsegs;i++){
     y=-box.length/2+i*dy;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.widthsegs+1;j++){
-      x=-box.width/2+j*dx;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y+dy,z);
+    if(det>=0){
+      for(j=0;j<box.widthsegs+1;j++){
+        x=-box.width/2+j*dx;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y+dy,z);
+      }
+    } else {
+      for(j=0;j<box.widthsegs+1;j++){
+        x=-box.width/2+j*dx;
+        glVertex3f(x,y+dy,z);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -60,10 +93,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.heightsegs;i++){
     z=box.height-i*dz;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.widthsegs+1;j++){
-      x=box.width/2-j*dx;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y,z-dz);
+    if(det>=0){
+      for(j=0;j<box.widthsegs+1;j++){
+        x=box.width/2-j*dx;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y,z-dz);
+      }
+    } else {
+      for(j=0;j<box.widthsegs+1;j++){
+        x=box.width/2-j*dx;
+        glVertex3f(x,y,z-dz);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -72,10 +113,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.heightsegs;i++){
     z=i*dz;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.widthsegs+1;j++){
-      x=box.width/2-j*dx;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y,z+dz);
+    if(det>=0){
+      for(j=0;j<box.widthsegs+1;j++){
+        x=box.width/2-j*dx;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y,z+dz);
+      }
+    } else {
+      for(j=0;j<box.widthsegs+1;j++){
+        x=box.width/2-j*dx;
+        glVertex3f(x,y,z+dz);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -84,10 +133,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.heightsegs;i++){
     z=box.height-i*dz;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.lengthsegs+1;j++){
-      y=-box.length/2+j*dy;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y,z-dz);
+    if(det>=0){
+      for(j=0;j<box.lengthsegs+1;j++){
+        y=-box.length/2+j*dy;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y,z-dz);
+      }
+    } else {
+      for(j=0;j<box.lengthsegs+1;j++){
+        y=-box.length/2+j*dy;
+        glVertex3f(x,y,z-dz);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -96,10 +153,18 @@ void drawBox(MyBox &box){
   for(i=0;i<box.heightsegs;i++){
     z=i*dz;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<box.lengthsegs+1;j++){
-      y=-box.length/2+j*dy;
-      glVertex3f(x,y,z);
-      glVertex3f(x,y,z+dz);
+    if(det>=0){
+      for(j=0;j<box.lengthsegs+1;j++){
+        y=-box.length/2+j*dy;
+        glVertex3f(x,y,z);
+        glVertex3f(x,y,z+dz);
+      }
+    } else {
+      for(j=0;j<box.lengthsegs+1;j++){
+        y=-box.length/2+j*dy;
+        glVertex3f(x,y,z+dz);
+        glVertex3f(x,y,z);
+      }
     }
     glEnd();
   }
@@ -115,6 +180,7 @@ void drawCylinder(MyCylinder &cylinder){
   float *ctheta,*stheta;
   int i,j,k;
   GLfloat matrix[16];
+  float det;
 
   glEnable(GL_NORMALIZE);
   for(k=0;k<4;k++)
@@ -122,6 +188,7 @@ void drawCylinder(MyCylinder &cylinder){
   glMaterialfv(GL_FRONT,GL_DIFFUSE,diffuseColor);
   for(k=0;k<16;k++)
     matrix[k]=cylinder.transform[k];
+  det=determinent(matrix);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(matrix);
@@ -139,13 +206,23 @@ void drawCylinder(MyCylinder &cylinder){
   glNormal3f(0,0,1);
   glBegin(GL_TRIANGLE_FAN);
   glVertex3f(0,0,z);
-  for(j=0;j<cylinder.sides+1;j++)
-    glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  if(det>=0){
+    for(j=0;j<cylinder.sides+1;j++)
+      glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  } else {
+    for(j=cylinder.sides;j>=0;j--)
+      glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  }
   glEnd();
   for(i=1;i<cylinder.capsegs;i++){
     glBegin(GL_QUAD_STRIP);
-    r1=i*dr;
-    r2=(i+1)*dr;
+    if(det>=0) {
+      r1=i*dr;
+      r2=(i+1)*dr;
+    } else {
+      r1=(i+1)*dr;
+      r2=i*dr;
+    }
     for(j=0;j<cylinder.sides+1;j++){
       glVertex3f(r1*ctheta[j],r1*stheta[j],z);
       glVertex3f(r2*ctheta[j],r2*stheta[j],z);
@@ -156,13 +233,23 @@ void drawCylinder(MyCylinder &cylinder){
   glNormal3f(0,0,-1);
   glBegin(GL_TRIANGLE_FAN);
   glVertex3f(0,0,z);
-  for(j=cylinder.sides;j>=0;j--)
-    glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  if(det>=0){
+    for(j=cylinder.sides;j>=0;j--)
+      glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  } else {
+    for(j=0;j<cylinder.sides+1;j++)
+      glVertex3f(dr*ctheta[j],dr*stheta[j],z);
+  }
   glEnd();
   for(i=1;i<cylinder.capsegs;i++){
     glBegin(GL_QUAD_STRIP);
-    r1=i*dr;
-    r2=(i+1)*dr;
+    if(det>=0) {
+      r1=i*dr;
+      r2=(i+1)*dr;
+    } else {
+      r1=(i+1)*dr;
+      r2=i*dr;
+    }
     for(j=cylinder.sides;j>=0;j--){
       glVertex3f(r1*ctheta[j],r1*stheta[j],z);
       glVertex3f(r2*ctheta[j],r2*stheta[j],z);
@@ -172,10 +259,18 @@ void drawCylinder(MyCylinder &cylinder){
   for(i=0;i<cylinder.heightsegs;i++){
     z=i*dz;
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<cylinder.sides+1;j++){
-      glNormal3f(ctheta[j],stheta[j],0);
-      glVertex3f(radius*ctheta[j],radius*stheta[j],z+dz);
-      glVertex3f(radius*ctheta[j],radius*stheta[j],z);
+    if(det>=0){
+      for(j=0;j<cylinder.sides+1;j++){
+        glNormal3f(ctheta[j],stheta[j],0);
+        glVertex3f(radius*ctheta[j],radius*stheta[j],z+dz);
+        glVertex3f(radius*ctheta[j],radius*stheta[j],z);
+      }
+    } else {
+      for(j=0;j<cylinder.sides+1;j++){
+        glNormal3f(ctheta[j],stheta[j],0);
+        glVertex3f(radius*ctheta[j],radius*stheta[j],z);
+        glVertex3f(radius*ctheta[j],radius*stheta[j],z+dz);
+      }
     }
     glEnd();
   }
@@ -259,6 +354,7 @@ void drawSphere(MySphere &sphere){
   int   slices,stacks;
   int i,j,k;
   GLfloat matrix[16];
+  float det;
 
   glEnable(GL_NORMALIZE);
   for(k=0;k<4;k++)
@@ -266,6 +362,7 @@ void drawSphere(MySphere &sphere){
   glMaterialfv(GL_FRONT,GL_DIFFUSE,diffuseColor);
   for(k=0;k<16;k++)
     matrix[k]=sphere.transform[k];
+  det=determinent(matrix);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(matrix);
@@ -289,39 +386,74 @@ void drawSphere(MySphere &sphere){
   glBegin(GL_TRIANGLE_FAN);
   glNormal3f(0,0,1);
   glVertex3f(0,0,radius);
-  for(i=0;i<slices+1;i++){
-    x=stheta[1]*cphi[i];
-    y=stheta[1]*sphi[i];
-    z=ctheta[1];
-    glNormal3f(x,y,z);
-    glVertex3f(radius*x,radius*y,radius*z);
+  if(det>=0){
+    for(i=0;i<slices+1;i++){
+      x=stheta[1]*cphi[i];
+      y=stheta[1]*sphi[i];
+      z=ctheta[1];
+      glNormal3f(x,y,z);
+      glVertex3f(radius*x,radius*y,radius*z);
+    }
+  } else {
+    for(i=slices;i>=0;i--){
+      x=stheta[1]*cphi[i];
+      y=stheta[1]*sphi[i];
+      z=ctheta[1];
+      glNormal3f(x,y,z);
+      glVertex3f(radius*x,radius*y,radius*z);
+    }
   }
   glEnd();
   for(i=1;i<stacks-1;i++){
     glBegin(GL_QUAD_STRIP);
-    for(j=0;j<slices+1;j++){
-      x=stheta[i]*cphi[j];
-      y=stheta[i]*sphi[j];
-      z=ctheta[i];
-      glNormal3f(x,y,z);
-      glVertex3f(radius*x,radius*y,radius*z);
-      x=stheta[i+1]*cphi[j];
-      y=stheta[i+1]*sphi[j];
-      z=ctheta[i+1];
-      glNormal3f(x,y,z);
-      glVertex3f(radius*x,radius*y,radius*z);
+    if(det>=0){
+      for(j=0;j<slices+1;j++){
+        x=stheta[i]*cphi[j];
+        y=stheta[i]*sphi[j];
+        z=ctheta[i];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+        x=stheta[i+1]*cphi[j];
+        y=stheta[i+1]*sphi[j];
+        z=ctheta[i+1];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+      }
+    } else {
+      for(j=0;j<slices+1;j++){
+        x=stheta[i+1]*cphi[j];
+        y=stheta[i+1]*sphi[j];
+        z=ctheta[i+1];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+        x=stheta[i]*cphi[j];
+        y=stheta[i]*sphi[j];
+        z=ctheta[i];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+      }
     }
     glEnd();
   }
   glBegin(GL_TRIANGLE_FAN);
   glNormal3f(0,0,-1);
   glVertex3f(0,0,-radius);
-  for(i=slices;i>=0;i--){
-    x=stheta[stacks-1]*cphi[i];
-    y=stheta[stacks-1]*sphi[i];
-    z=ctheta[stacks-1];
-    glNormal3f(x,y,z);
-    glVertex3f(radius*x,radius*y,radius*z);
+  if(det>=0){
+    for(i=slices;i>=0;i--){
+      x=stheta[stacks-1]*cphi[i];
+      y=stheta[stacks-1]*sphi[i];
+      z=ctheta[stacks-1];
+      glNormal3f(x,y,z);
+      glVertex3f(radius*x,radius*y,radius*z);
+    }
+  } else {
+    for(i=0;i<slices+1;i++){
+      x=stheta[stacks-1]*cphi[i];
+      y=stheta[stacks-1]*sphi[i];
+      z=ctheta[stacks-1];
+      glNormal3f(x,y,z);
+      glVertex3f(radius*x,radius*y,radius*z);
+    }
   }
   glEnd();
   delete [] cphi;
@@ -363,6 +495,7 @@ void drawMesh(MyMesh &mesh){
   double   x0,x1,x2,y0,y1,y2,z0,z1,z2;
   int      i,k;
   GLfloat  matrix[16];
+  float det;
 
   glEnable(GL_NORMALIZE);
   for(k=0;k<4;k++)
@@ -370,6 +503,7 @@ void drawMesh(MyMesh &mesh){
   glMaterialfv(GL_FRONT,GL_DIFFUSE,diffuseColor);
   for(k=0;k<16;k++)
     matrix[k]=mesh.transform[k];
+  det=determinent(matrix);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(matrix);
@@ -386,9 +520,14 @@ void drawMesh(MyMesh &mesh){
     nz=(x1-x0)*(y2-y0)-(y1-y0)*(x2-x0);
     norm=sqrt(nx*nx+ny*ny+nz*nz);
     glNormal3f(nx/norm,ny/norm,nz/norm);
-    glVertex3f(pt0.x,pt0.y,pt0.z);
-    glVertex3f(pt1.x,pt1.y,pt1.z);
-    glVertex3f(pt2.x,pt2.y,pt2.z);
+      glVertex3f(pt0.x,pt0.y,pt0.z);
+    if(det>=0){
+      glVertex3f(pt1.x,pt1.y,pt1.z);
+      glVertex3f(pt2.x,pt2.y,pt2.z);
+    } else {
+      glVertex3f(pt2.x,pt2.y,pt2.z);
+      glVertex3f(pt1.x,pt1.y,pt1.z);
+    }
   }
   glEnd();
   glPopMatrix();
@@ -739,7 +878,7 @@ Geosphere* getGeosphere(Geosphere *geoIni, int nbSegs){
 /*draw a geosphere centered at (0,0,0)*/
 /*start from an icosahedron, nbSegs>=1*/
 /*geosphere=icosahedron when nbSegs=1*/
-void drawGeosphere(float radius, int nbSegs){
+void drawGeosphere(float radius, int nbSegs, bool invert){
   Geosphere *geo;
   int       i,j,index;
   float     x,y,z;
@@ -748,23 +887,39 @@ void drawGeosphere(float radius, int nbSegs){
   geo=getGeosphere(geo,nbSegs);
   for(i=0;i<geo->nbFaces;i++){
     glBegin(GL_TRIANGLES);
-    for(j=0;j<3;j++){
-      index=geo->faces[i][j];
-      x=geo->vertices[index][0];
-      y=geo->vertices[index][1];
-      z=geo->vertices[index][2];
-      glNormal3f(x,y,z);
-      glVertex3f(radius*x,radius*y,radius*z);
+    if(!invert){
+      for(j=0;j<3;j++){
+        index=geo->faces[i][j];
+        x=geo->vertices[index][0];
+        y=geo->vertices[index][1];
+        z=geo->vertices[index][2];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+      }
+    } else {
+      for(j=2;j>=0;j--){
+        index=geo->faces[i][j];
+        x=geo->vertices[index][0];
+        y=geo->vertices[index][1];
+        z=geo->vertices[index][2];
+        glNormal3f(x,y,z);
+        glVertex3f(radius*x,radius*y,radius*z);
+      }
     }
     glEnd();
   }
   relaxGeosphere(geo);
 }
 
+void drawGeosphere(float radius, int nbSegs){
+  drawGeosphere(radius, nbSegs, false);
+}
+
 /*draw a geosphere according to the structure MySphere*/
 void drawGeosphere(MySphere &sphere){
   GLfloat diffuseColor[4];
   GLfloat matrix[16];
+  float det;
   int     k;
 
   glEnable(GL_NORMALIZE);
@@ -773,10 +928,11 @@ void drawGeosphere(MySphere &sphere){
   glMaterialfv(GL_FRONT,GL_DIFFUSE,diffuseColor);
   for(k=0;k<16;k++)
     matrix[k]=sphere.transform[k];
+  det=determinent(matrix);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(matrix);
-  drawGeosphere(sphere.radius,sphere.segs);
+  drawGeosphere(sphere.radius,sphere.segs,det<0);
   glPopMatrix();
   glDisable(GL_NORMALIZE);
 }

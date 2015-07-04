@@ -64,7 +64,7 @@ Particles *loadParticlesPAR(QString &fileName){
   int k,n,i;
 
   /*check if file is OK before setting particles*/
-  file=fopen(fileName.toAscii().constData(),"rb");
+  file=fopen(fileName.toStdString().data(),"rb");
   nread=fread(filetype,1,3,file);
   if(nread!=3 || strncmp(filetype,"PAR",3)){
     QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Wrong file."));
