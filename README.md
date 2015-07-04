@@ -42,15 +42,15 @@ BPV can read two kinds of files: data files and geometry files.
 ### Data files (*.par)
 
 Data files can be split in several sections: The first ones describe the particles (e.g. particle type, variables, bonds between particles, etc.) while the last one contains the simulation data itself (i.e. particle position and variables value at a given time).  
-Here is the detailed structure of a data file:
+Here is the detailed structure of a data file. Sections are given in order, and sizes are in bytes.
 
-+ **PAR**. Every data file must starts with the 3 bytes 'PAR' (i.e. 0x50 0x41 0x52).
++ **PAR**. Size = 3. Every data file must starts with the 3 bytes 'PAR' (i.e. 0x50 0x41 0x52).
 ```
   PAR (3 bytes)
 ```
-+ **Types**. Particles can be grouped in different types. Each type has its own name, default radius, and default color which are used to display the particles (e.g. you can have one type to represent Hydrogen atoms in white, another one for Oxygen atoms in red, etc.)
++ **Types**. Size = 1 + nbTypes * 39. Particles can be grouped in different types. Each type has its own name, default radius, and default color which are used to display the particles (e.g. you can have one type to represent Hydrogen atoms in white, another one for Oxygen atoms in red, etc.)
 ```
-  nbTypes (1 byte)
+  nbTypes (1 byte. >= 1)
   name    type 1  (32 bytes)
   radius  type 1  (1 float)
   red     type 1  (1 byte)
@@ -60,9 +60,9 @@ Here is the detailed structure of a data file:
   radius  type 2  (1 float)
   etc.
 ```
-+ **Variables**. Particles have 3 coordinates, but can also have additional variables associated to them (e.g. energy, velocity, etc.). This section lets you name each axis and each variable.
++ **Variables**. Size = 97 + nbVariables * 32. Particles have 3 coordinates, but can also have additional variables associated to them (e.g. energy, velocity, etc.). This section lets you name each axis and each variable.
 ```
-  nbVariables (1 byte. Does not include the x, y, and z axis)
+  nbVariables (1 byte. Can be 0 and does not include the x, y, and z axis, which are mandatory)
   name    x  axis    (32 bytes)
   name    y  axis    (32 bytes)
   name    z  axis    (32 bytes)
@@ -70,25 +70,25 @@ Here is the detailed structure of a data file:
   name    variable 2 (32 bytes)
   etc.
 ```
-+ **Particles**. This section contains the number of particles in the simulation and specifies the type of each particle.
++ **Particles**. Size = 4 + nbParticles. This section contains the number of particles in the simulation and specifies the type of each particle.
 ```
-  nbParticles (1 unsigned int)
+  nbParticles (1 unsigned int. >= 1)
   type of particle 1  (1 byte. 0 based: 0 for type 1, 1 for type 2, etc.)
   type of particle 2  (1 byte)
   etc.
 ```
-+ **Bonds**. Bonds must be specified even if your simulation does not contain bonds (in which case set both nbBonds and bonds radius to 0 ).
++ **Bonds**. Size = 8 + nbBonds * 8. Bonds must be specified even if your simulation does not contain bonds (in which case set both nbBonds and bonds radius to 0 ).
 ```
-  nbBonds       (1 unsigned int)
+  nbBonds       (1 unsigned int. Can be 0)
   bonds radius  (1 float)
   1st index of bond 1 (1 unsigned int. 0 based)
   2nd index of bond 1 (1 unsigned int)
   1st index of bond 2 (1 unsigned int)
   etc.
 ```
-+ **Steps**. A simulation is made of successive steps corresponding to a given time and in which each particle has a given set of coordintes and variable values.
++ **Steps**. Size = 4 + nbSteps * (4 + nbParticles * (12 + nbVariables * 4)). A simulation is made of successive steps corresponding to a given time and in which each particle has a given set of coordintes and variable values.
 ```
-  nbSteps       (1 unsigned int)
+  nbSteps       (1 unsigned int. >= 1)
   time step 1   (1 float. Expressed in seconds)
   x coordinate particle 1 step 1  (1 float)
   y coordinate particle 1 step 1  (1 float)
@@ -101,6 +101,8 @@ Here is the detailed structure of a data file:
   time step 2   (1 float)
   etc.
 ```
+
+The total size of a data file is 117 + nbTypes * 39 + nbVariables * 32 + nbParticles + nbBonds * 8 + nbSteps * (4 + nbParticles * (12 + nbVariables * 4)) bytes.
 
 ### Geometry files (*.geo)
 Geometry files are text files containing the geometry of the scene in which the particles move.  
