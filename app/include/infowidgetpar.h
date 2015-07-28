@@ -44,7 +44,7 @@ private:
   void enableWidgets();
 
 private:
-  Particles *minMaxParticles;
+  Particles   *minMaxParticles;
   int         nbTypes;
   PartSpec    *pSpec;
   QCheckBox   *activeTypeBx;

@@ -86,6 +86,17 @@ Here is the detailed structure of a data file. Sections are given in order, and 
   1st index of bond 2 (1 unsigned int)
   etc.
 ```
++ **Meshes**. Size = 4 + nbMeshes * 36 + sum(nbTriangles) * 12. More than one mesh can be defined. A mesh is a set of triangles and each triangle is defined with a set of three indices (each index is in the range [0,nbParticles[). The order in which the indices are given is important as it defines which side of the triangle is visible.
+```
+  nbMeshes                (1 unsigned int. Can be 0)
+  name mesh1              (32 bytes)
+  nbTriangles mesh1       (1 unsigned int)
+  indices triangle1 mesh1 (3 unsigned int)
+  indices triangle2 mesh1 (3 unsigded int)
+  etc.
+  name mesh2              (32 bytes)
+  etc.
+```
 + **Steps**. Size = 4 + nbSteps * (4 + nbParticles * (12 + nbVariables * 4)). A simulation is made of successive steps corresponding to a given time and in which each particle has a given set of coordintes and variable values.
 ```
   nbSteps       (1 unsigned int. >= 1)
@@ -102,7 +113,7 @@ Here is the detailed structure of a data file. Sections are given in order, and 
   etc.
 ```
 
-The total size of a data file is 117 + nbTypes * 39 + nbVariables * 32 + nbParticles + nbBonds * 8 + nbSteps * (4 + nbParticles * (12 + nbVariables * 4)) bytes.
+The total size of a data file is 121 + nbTypes * 39 + nbVariables * 32 + nbParticles + nbBonds * 8 + nbMeshes * 36 + sum(nbTriangles) * 12 + nbSteps * (4 + nbParticles * (12 + nbVariables * 4)) bytes.
 
 ### Geometry files (*.geo)
 Geometry files are text files containing the geometry of the scene in which the particles move.  

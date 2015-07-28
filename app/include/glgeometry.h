@@ -14,6 +14,8 @@ void   drawSphere         (MySphere&);
 void   drawGeosphere      (float, int);
 void   drawGeosphere      (MySphere&);
 void   drawLines          (MyLines&);
+void   drawTriangle       (float pt0[3], float pt1[3], float pt2[3],
+                           float color0[4], float color1[4], float color2[4]);
 void   drawMesh           (MyMesh&);
 void   getMinMaxBox       (MyBox&, float*);
 void   getMinMaxCylinder  (MyCylinder&, float*);

@@ -259,9 +259,11 @@ GLWidget::GLWidget(QWidget *parent) :
   totScale = 1;
   nbParticles = 0;
   nbBonds = 0;
+  nbMeshes = 0;
   nbTypes = 0;
   enabledParticles = false;
   enabledBonds = false;
+  enabledMeshes = false;
   enabledGeometry = false;
   oldMaxDim = 0;
   animTra = true;
@@ -396,14 +398,19 @@ bool GLWidget::blankParticle(int index, int theStep){
 }
 
 void GLWidget::drawScene(bool opaque){
-  int k, index, type;
-  int type1, type2;
-  QColor color, color1, color2;
-  int *bond;
+  unsigned char type;
+  unsigned int index, indexMesh;
+  int k;
+  unsigned char type1, type2, type3;
+  QColor color, color1, color2, color3;
+  unsigned int *bond, *triangle;
   float u[3], nn[2], norm, angle;
-  float *pos, *pos1, *pos2, halfpos[3], diffuseColor[4];
+  float *pos, *pos1, *pos2, *pos3, halfpos[3], diffuseColor[4];
+  float pt0[3], pt1[3], pt2[3], c0[4], c1[4], c2[4];
+  MeshSpec *mSpec;
   bool showParticle = true;
   bool showBond = true;
+  bool showMesh = true;
 
   if(particles!=NULL){
     if(nbTrajActive>0&&opaque) for(k = 0; k<nbTrajActive; k++)
@@ -521,6 +528,68 @@ void GLWidget::drawScene(bool opaque){
           }
         }
       }
+    }
+    if(enabledMeshes){
+        for(index=0; index<particles->nbMeshes; index++){
+            mSpec=particles->mSpec+index;
+            if(!mSpec->active){
+                continue;
+            }
+            for(indexMesh=0; indexMesh<mSpec->nbTriangles; indexMesh++){
+                triangle=mSpec->indices[indexMesh];
+                type1 = particles->pType[triangle[0]];
+                type2 = particles->pType[triangle[1]];
+                type3 = particles->pType[triangle[2]];
+                showMesh = particles->pSpec[type1].active&&particles->pSpec[type2].active&&
+                        particles->pSpec[type3].active;
+                if(nbBlanksUsed>0) showMesh = showMesh&&(!blankParticle(triangle[0], step))
+                    &&(!blankParticle(triangle[1], step))&&(!blankParticle(triangle[2], step));
+                if(!showMesh){
+                    continue;
+                }
+                pos1 = particles->pPos[step][triangle[0]];
+                pos2 = particles->pPos[step][triangle[1]];
+                pos3 = particles->pPos[step][triangle[2]];
+                if(pos1[0]==INFINITY || pos2[0]==INFINITY || pos3[0]==INFINITY){
+                    continue;
+                }
+                color1 = getParticleColor(particles, step, triangle[0]);
+                color2 = getParticleColor(particles, step, triangle[1]);
+                color3 = getParticleColor(particles, step, triangle[2]);
+                if((!opaque&&color1.alpha()==255&&color2.alpha()==255&&color3.alpha()==255) ||
+                   (opaque&&(color1.alpha()<255||color2.alpha()<255||color3.alpha()<255))){
+                    continue;
+                }
+                if(mSpec->showWires){
+                    glDisable(GL_LIGHTING);
+                    glBegin(GL_LINE_LOOP);
+                    glColor4f(color1.redF(), color1.greenF(), color1.blueF(), color1.alphaF());
+                    glVertex3f(pos1[0], pos1[1], pos1[2]);
+                    glColor4f(color2.redF(), color2.greenF(), color2.blueF(), color2.alphaF());
+                    glVertex3f(pos2[0], pos2[1], pos2[2]);
+                    glColor4f(color3.redF(), color3.greenF(), color3.blueF(), color3.alphaF());
+                    glVertex3f(pos3[0], pos3[1], pos3[2]);
+                    glEnd();
+                    glEnable(GL_LIGHTING);
+                } else {
+                    pt0[0]=pos1[0]; pt0[1]=pos1[1]; pt0[2]=pos1[2];
+                    pt1[0]=pos2[0]; pt1[1]=pos2[1]; pt1[2]=pos2[2];
+                    pt2[0]=pos3[0]; pt2[1]=pos3[1]; pt2[2]=pos3[2];
+                    c0[0]=color1.redF(); c0[1]=color1.greenF(); c0[2]=color1.blueF(); c0[3]=color1.alphaF();
+                    c1[0]=color2.redF(); c1[1]=color2.greenF(); c1[2]=color2.blueF(); c1[3]=color2.alphaF();
+                    c2[0]=color3.redF(); c2[1]=color3.greenF(); c2[2]=color3.blueF(); c2[3]=color3.alphaF();
+                    // The following translation is actually needed,
+                    // otherwise lighting can be wrong sometimes...
+                    // e.g. meshes and points are enabled (not spheres).
+                    // Don't know why though...
+                    glTranslatef(0, 0, 0);
+                    drawTriangle(pt0, pt1, pt2, c0, c1, c2);
+                    if(!mSpec->cullBackFace){
+                        drawTriangle(pt0, pt2, pt1, c0, c2, c1);
+                    }
+                }
+            }
+        }
     }
   }
   if(geometry!=NULL&&enabledGeometry){
@@ -891,12 +960,14 @@ void GLWidget::loadParticles(Particles *part){
   particles = part;
   nbParticles = part->nbParticles;
   nbBonds = part->nbBonds;
+  nbMeshes = part->nbMeshes;
   nbTypes = part->nbTypes;
   createParticlesList();
   enabledAxis = true;
   perspective = false;
   enabledParticles = true;
   enabledBonds = true;
+  enabledMeshes = true;
   step = 0;
   center();
   xRot = -(int)(90*ANGLE_DIV);
@@ -920,6 +991,7 @@ void GLWidget::clearParticles(){
     step = 0;
     nbParticles = 0;
     nbBonds = 0;
+    nbMeshes = 0;
     nbTypes = 0;
     particles = NULL;
     updateTimeStr(step);
@@ -954,29 +1026,29 @@ void GLWidget::goToStep(int nextStep){
   if(particles==NULL){
     if(step!=0){
       step = 0;
-      updateTimeStr(nextStep);
+      updateTimeStr(step);
       emit stepChanged(step);
       updateGL();
     }
     return;
   }
-  if(nextStep>=particles->nbSteps){
-    if(step!=particles->nbSteps-1){
+  if(nextStep>=(int)(particles->nbSteps)){
+    if(step!=(int)(particles->nbSteps-1)){
       step = particles->nbSteps-1;
-      updateTimeStr(nextStep);
+      updateTimeStr(step);
       emit stepChanged(step);
       updateGL();
     }
   }else if(nextStep<0){
     if(step!=0){
       step = 0;
-      updateTimeStr(nextStep);
+      updateTimeStr(step);
       emit stepChanged(step);
       updateGL();
     }
   }else if(step!=nextStep){
     step = nextStep;
-    updateTimeStr(nextStep);
+    updateTimeStr(step);
     emit stepChanged(step);
     updateGL();
   }
@@ -1014,6 +1086,11 @@ void GLWidget::setEnabledBonds(bool enabled){
 
 void GLWidget::setEnabledParticles(bool enabled){
   enabledParticles = enabled;
+  updateGL();
+}
+
+void GLWidget::setEnabledMeshes(bool enabled){
+  enabledMeshes = enabled;
   updateGL();
 }
 
@@ -1115,6 +1192,18 @@ void GLWidget::setBondSpec(BondSpec spec){
   updateGL();
 }
 
+void GLWidget::setMeshSpec(int index, MeshSpec spec){
+    if(index>=0 && index<nbMeshes){
+        particles->mSpec[index] = spec;
+        updateGL();
+    }
+}
+
+void GLWidget::setAllMeshSpec(MeshSpec *specs){
+    memcpy(particles->mSpec, specs, nbMeshes*sizeof(MeshSpec));
+    updateGL();
+}
+
 void GLWidget::resetGeometry(){
   if(geometry!=NULL){
     glDeleteLists(geomsList, geometry->nbObj);
@@ -1174,7 +1263,7 @@ void GLWidget::drawTrajectory(Trajectory &traj){
       startStep=0;
       endStep=particles->nbSteps-1;
     }
-    if(endStep>=particles->nbSteps||traj.index<0||traj.index>=particles->nbParticles) return;
+    if(endStep>=(int)particles->nbSteps||traj.index<0||traj.index>=(int)particles->nbParticles) return;
     if(traj.single) startIndex = endIndex = traj.index;
     else{
       startIndex = 0;
@@ -1211,17 +1300,18 @@ float* GLWidget::getMinMax(){
   float *out = NULL;
   float pm1[2] = {-1, 1};
   bool foundOne;
+  unsigned int index;
   int i, j;
 
   tmps = new float[6];
-  if(particles!=NULL&&(enabledParticles||enabledBonds||nbTrajActive>0)){
+  if(particles!=NULL&&(enabledParticles||enabledBonds||enabledMeshes||nbTrajActive>0)){
     if(particles->nbParticles>0){
-      for(i = 0; i<particles->nbParticles; i++){
-        if(particles->pPos[step][i][0]!=INFINITY&&!blankParticle(i, step)){
+      for(index = 0; index<particles->nbParticles; index++){
+        if(particles->pPos[step][index][0]!=INFINITY&&!blankParticle(index, step)){
           out = new float[6];
           for(j = 0; j<6; j++)
-            tmps[j] = particles->pPos[step][i][j/2]+pm1[j&1]
-                *particles->pSpec[particles->pType[i]].radius;
+            tmps[j] = particles->pPos[step][index][j/2]+pm1[j&1]
+                *particles->pSpec[particles->pType[index]].radius;
           minx = tmps[0];
           maxx = tmps[1];
           miny = tmps[2];
@@ -1231,11 +1321,11 @@ float* GLWidget::getMinMax(){
           break;
         }
       }
-      for(i++; i<particles->nbParticles; i++){
-        if(particles->pPos[step][i][0]!=INFINITY&&!blankParticle(i, step)){
+      for(index++; index<particles->nbParticles; index++){
+        if(particles->pPos[step][index][0]!=INFINITY&&!blankParticle(index, step)){
           for(j = 0; j<6; j++)
-            tmps[j] = particles->pPos[step][i][j/2]+pm1[j&1]
-                *particles->pSpec[particles->pType[i]].radius;
+            tmps[j] = particles->pPos[step][index][j/2]+pm1[j&1]
+                *particles->pSpec[particles->pType[index]].radius;
           minx = tmps[0]<minx ? tmps[0] : minx;
           maxx = tmps[1]>maxx ? tmps[1] : maxx;
           miny = tmps[2]<miny ? tmps[2] : miny;
@@ -1603,10 +1693,10 @@ void GLWidget::printScr(int x, int y, const char *format, ...){
   }
 }
 
-void GLWidget::updateTimeStr(int theStep){
+void GLWidget::updateTimeStr(unsigned int theStep){
   static char unit[8][3]={"ps","ns","us","ms","s ","m ","h ","d "};
   if(particles!=NULL){
-    if(theStep>=0 && theStep<particles->nbSteps){
+    if(theStep<particles->nbSteps){
       float t=particles->time[theStep]*1e12;
       int i;
       for(i=0;i<4;i++){

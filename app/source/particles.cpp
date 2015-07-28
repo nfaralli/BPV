@@ -34,6 +34,14 @@
   2nd index of bond 1 (1 unsigned int)
   1st index of bond 2 (1 unsigned int)
   etc.
+  nbMeshes                (1 unsigned int)
+  name mesh1              (NAME_LENGTH bytes)
+  nbTriangles mesh1       (1 unsigned int)
+  indices triangle1 mesh1 (3 unsigned int)
+  indices triangle2 mesh1 (3 unsigded int)
+  etc.
+  name mesh2              (NAME_LENGTH bytes)
+  etc.
   nbSteps       (1 unsigned int)
   time step 1   (1 float)
   x coordinate particle 1 step 1  (1 float)
@@ -47,178 +55,292 @@
   time step 2   (1 float)
   etc.
 */
-Particles *loadParticlesPAR(QString &fileName){
-  Particles *particles=NULL;
-  FILE    *file;
-  size_t  nread;
-  long    fpos;
-  char    filetype[3];
-  unsigned char nbTypes;
-  unsigned char nbVariables;
-  unsigned int  nbParticles;
-  unsigned int  nbBonds;
-  unsigned int  nbSteps;
-  unsigned char r,g,b,type;
-  unsigned int  index1,index2;
-  float         t,x,y,z,var,radius,bRadius;
-  int k,n,i;
 
-  /*check if file is OK before setting particles*/
-  file=fopen(fileName.toStdString().data(),"rb");
-  nread=fread(filetype,1,3,file);
-  if(nread!=3 || strncmp(filetype,"PAR",3)){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Wrong file."));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&nbTypes,sizeof(unsigned char),1,file)!=1){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (1)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fseek(file,nbTypes*(sizeof(float)+(NAME_LENGTH+3)*sizeof(unsigned char)),SEEK_CUR)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (1)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&nbVariables,sizeof(unsigned char),1,file)!=1){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (2)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fseek(file,(3+nbVariables)*NAME_LENGTH*sizeof(unsigned char),SEEK_CUR)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (2)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&nbParticles,sizeof(unsigned int),1,file)!=1){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (3)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fseek(file,nbParticles*sizeof(unsigned char),SEEK_CUR)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (3)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&nbBonds,sizeof(unsigned int),1,file)!=1){
-    QMessageBox::warning(NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (4)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&bRadius,sizeof(float),1,file)!=1){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (5)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fseek(file,2*nbBonds*sizeof(unsigned int),SEEK_CUR)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (4)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fread(&nbSteps,sizeof(unsigned int),1,file)!=1){
-    QMessageBox::warning(
-       NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fread failed (6)"));
-    fclose(file);
-    return NULL;
-  }
-  if(fseek(file,(1+(3+nbVariables)*nbParticles)*nbSteps*sizeof(float),SEEK_CUR)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),QObject::tr("Corrupted File. fseek failed (5)"));
-    fclose(file);
-    return NULL;
-  }
-  fpos=ftell(file);
-  fseek(file,0,SEEK_END);
-  if(fpos!=ftell(file)){
-    QMessageBox::warning(
-        NULL,QObject::tr("Load Particles"),
-        QObject::tr("Corrupted File. wrong file size. got %1 Bytes, expected %2 Bytes").
-            arg(ftell(file)).arg(fpos));
-    fclose(file);
-    return NULL;
-  }
-  /*get the data and set particles*/
-  particles=new Particles;
-  fseek(file,4,SEEK_SET);
-  particles->nbTypes=nbTypes;
-  particles->nbVariables=nbVariables;
-  particles->pSpec=new PartSpec[nbTypes];
-  for(k=0;k<(int)nbTypes;k++){
-    nread=fread(particles->pSpec[k].name,sizeof(char),NAME_LENGTH,file);
-    nread=fread(&radius,sizeof(float),1,file);
-    nread=fread(&r,sizeof(unsigned char),1,file);
-    nread=fread(&g,sizeof(unsigned char),1,file);
-    nread=fread(&b,sizeof(unsigned char),1,file);
-    particles->pSpec[k].name[NAME_LENGTH]='\0';
-    particles->pSpec[k].radius=radius;
-    particles->pSpec[k].segs=4;
-    particles->pSpec[k].color=MyColor(r,g,b);
-    particles->pSpec[k].showPoints=true;
-    particles->pSpec[k].pointSize=1;
-    particles->pSpec[k].active=true;
-  }
-  fseek(file,sizeof(unsigned char),SEEK_CUR);
-  particles->nbVariables=nbVariables;
-  particles->varName=new char*[3+nbVariables];
-  for(k=0;k<3+nbVariables;k++){
-    particles->varName[k]=new char[NAME_LENGTH+1];
-    nread=fread(particles->varName[k],sizeof(char),NAME_LENGTH,file);
-    particles->varName[k][NAME_LENGTH]='\0';
-  }
-  fseek(file,sizeof(unsigned int),SEEK_CUR);
-  particles->nbParticles=nbParticles;
-  particles->pType=new unsigned char[nbParticles];
-  for(k=0;k<(int)nbParticles;k++){
-    nread=fread(&type,sizeof(unsigned char),1,file);
-    particles->pType[k]=type;
-  }
-  fseek(file,sizeof(unsigned int)+sizeof(float),SEEK_CUR);
-  particles->nbBonds=nbBonds;
-  particles->bSpec.radius=bRadius;
-  particles->bSpec.slices=32;
-  particles->bSpec.stacks=1;
-  particles->bSpec.showWires=true;
-  particles->bonds=new int*[nbBonds];
-  for(k=0;k<(int)nbBonds;k++){
-    nread=fread(&index1,sizeof(unsigned int),1,file);
-    nread=fread(&index2,sizeof(unsigned int),1,file);
-    particles->bonds[k]=new int[2];
-    particles->bonds[k][0]=index1;
-    particles->bonds[k][1]=index2;
-  }
-  fseek(file,sizeof(unsigned int),SEEK_CUR);
-  particles->nbSteps=nbSteps;
-  particles->time=new float[nbSteps];
-  particles->pPos=new float**[nbSteps];
-  for(k=0;k<(int)nbSteps;k++){
-    nread=fread(&t,sizeof(float),1,file);
-    particles->time[k]=t;
-    particles->pPos[k]=new float*[nbParticles];
-    for(n=0;n<(int)nbParticles;n++){
-      particles->pPos[k][n]=new float[3+nbVariables];
-      nread=fread(&x,sizeof(float),1,file);
-      nread=fread(&y,sizeof(float),1,file);
-      nread=fread(&z,sizeof(float),1,file);
-      particles->pPos[k][n][0]=x;
-      particles->pPos[k][n][1]=y;
-      particles->pPos[k][n][2]=z;
-      for(i=0;i<nbVariables;i++){
-        nread=fread(&var,sizeof(float),1,file);
-        particles->pPos[k][n][i+3]=var;
+/*
+    PAR (3 bytes)
+*/
+static bool loadParSection(FILE *file, Particles*, QString *error) {
+    size_t nread;
+    char filetype[3];
+    nread=fread(filetype,1,3,file);
+    if(nread!=3 || strncmp(filetype,"PAR",3)){
+        *error = "Invalid file: file must start with \"PAR\".";
+        return false;
+    }
+    return true;
+}
+
+/*
+    nbTypes        (1 byte)
+    name    type 1 (NAME_LENGTH bytes)
+    radius  type 1 (1 float)
+    red     type 1 (1 byte)
+    green   type 1 (1 byte)
+    blue    type 1 (1 byte)
+    name    type 2 (NAME_LENGTH bytes)
+    radius  type 2 (1 float)
+    etc.
+*/
+static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned char nbTypes, i, r, g, b;
+    long fPos;
+
+    if(fread(&nbTypes,sizeof(unsigned char),1,file)!=1){
+      *error = "Invalid file: missing types section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos < (long)(nbTypes*(sizeof(float)+(NAME_LENGTH+3)*sizeof(unsigned char)))){
+      *error = "Invalid file: invalid types section.";
+      return false;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbTypes = nbTypes;
+    particles->pSpec=(PartSpec*)calloc(nbTypes, sizeof(PartSpec));
+    for(i=0; i<nbTypes; i++){
+      nread=fread(particles->pSpec[i].name,sizeof(char),NAME_LENGTH,file);
+      nread=fread(&(particles->pSpec[i].radius),sizeof(float),1,file);
+      nread=fread(&r,sizeof(unsigned char),1,file);
+      nread=fread(&g,sizeof(unsigned char),1,file);
+      nread=fread(&b,sizeof(unsigned char),1,file);
+      particles->pSpec[i].segs=4;
+      particles->pSpec[i].color=MyColor(r,g,b);
+      particles->pSpec[i].showPoints=true;
+      particles->pSpec[i].pointSize=1;
+      particles->pSpec[i].active=true;
+    }
+    return true;
+}
+
+/*
+    nbVariables        (1 byte)
+    name    x  axis    (NAME_LENGTH bytes)
+    name    y  axis    (NAME_LENGTH bytes)
+    name    z  axis    (NAME_LENGTH bytes)
+    name    variable 1 (NAME_LENGTH bytes)
+    name    variable 2 (NAME_LENGTH bytes)
+*/
+static bool loadVariablesSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned char nbVariables, i;
+    long fPos;
+
+    if(fread(&nbVariables,sizeof(unsigned char),1,file)!=1){
+      *error = "Invalid file: missing variables section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos < (long)((3+nbVariables)*NAME_LENGTH*sizeof(unsigned char))){
+      *error = "Invalid file: invalid variables section.";
+      return false;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbVariables = nbVariables;
+    particles->varName = (char(*)[NAME_LENGTH+1])calloc(3+nbVariables, sizeof(char[NAME_LENGTH+1]));
+    for(i=0;i<3+nbVariables;i++){
+      nread=fread(particles->varName[i],sizeof(char),NAME_LENGTH,file);
+    }
+    return true;
+}
+
+/*
+    nbParticles        (1 unsigned int)
+    type of particle 1 (1 byte)
+    type of particle 2 (1 byte)
+    etc.
+*/
+static bool loadParticlesTypeSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned int nbParticles;
+    long fPos;
+
+    if(fread(&nbParticles,sizeof(unsigned int),1,file)!=1){
+      *error = "Invalid file: missing particles type section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos < (long)(nbParticles*sizeof(unsigned char))){
+      *error = "Invalid file: invalid particles type section.";
+      return false;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbParticles = nbParticles;
+    particles->pType=(unsigned char*)calloc(nbParticles, sizeof(unsigned char));
+    nread=fread(particles->pType,sizeof(unsigned char),nbParticles,file);
+    return true;
+}
+
+/*
+    nbBonds             (1 unsigned int)
+    bonds radius        (1 float)
+    1st index of bond 1 (1 unsigned int)
+    2nd index of bond 1 (1 unsigned int)
+    1st index of bond 2 (1 unsigned int)
+    etc.
+*/
+static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned int nbBonds, i;
+    long fPos;
+
+    if(fread(&nbBonds,sizeof(unsigned int),1,file)!=1){
+      *error = "Invalid file: missing bonds section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos < (long)(sizeof(float)+2*nbBonds*sizeof(unsigned int))){
+      *error = "Invalid file: invalid bonds section.";
+      return false;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbBonds = nbBonds;
+    nread=fread(&(particles->bSpec.radius),sizeof(float),1,file);
+    particles->bSpec.slices=32;
+    particles->bSpec.stacks=1;
+    particles->bSpec.showWires=true;
+    particles->bonds=(unsigned int(*)[2])calloc(nbBonds, sizeof(unsigned int[2]));
+    for(i=0;i<nbBonds;i++){
+      nread=fread(particles->bonds[i], sizeof(unsigned int), 2, file);
+    }
+    return true;
+}
+
+/*
+    nbMeshes                (1 unsigned int)
+    name mesh1              (NAME_LENGTH bytes)
+    nbTriangles mesh1       (1 unsigned int)
+    indices triangle1 mesh1 (3 unsigned int)
+    indices triangle2 mesh1 (3 unsigded int)
+    etc.
+    name mesh2              (NAME_LENGTH bytes)
+    etc.
+*/
+static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned int nbMeshes, nbTriangles, i, j;
+    long fPos;
+
+    if(fread(&nbMeshes,sizeof(unsigned int),1,file)!=1){
+      *error = "Invalid file: missing meshes section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos == (long)(nbMeshes*(1+particles->nbParticles*(3+particles->nbVariables))*sizeof(float))){
+      // Special case for backward compatibility:
+      // old versions didn't contain meshes section, and nbMeshes here is actually nbSteps.
+      fseek(file, fPos-sizeof(unsigned int), SEEK_SET);
+      return true;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbMeshes = nbMeshes;
+    particles->mSpec = (MeshSpec*)calloc(nbMeshes, sizeof(MeshSpec));
+    for(i=0; i<nbMeshes; i++){
+        if(fread(particles->mSpec[i].name,sizeof(char),NAME_LENGTH,file)!=NAME_LENGTH){
+          *error = "Invalid file: invalid meshes section.";
+          return false;
+        }
+        if(fread(&nbTriangles,sizeof(unsigned int),1,file)!=1){
+          *error = "Invalid file: invalid meshes section.";
+          return false;
+        }
+        fPos = ftell(file);
+        fseek(file, 0, SEEK_END);
+        if(ftell(file)-fPos < (long)(nbTriangles*3*sizeof(unsigned int))){
+          *error = "Invalid file: invalid meshes section.";
+          return false;
+        }
+        fseek(file, fPos, SEEK_SET);
+        particles->mSpec[i].active=true;
+        particles->mSpec[i].showWires=false;
+        particles->mSpec[i].cullBackFace=true;
+        particles->mSpec[i].nbTriangles = nbTriangles;
+        particles->mSpec[i].indices = (unsigned int(*)[3])calloc(nbTriangles, sizeof(unsigned int[3]));
+        for(j=0; j<particles->mSpec[i].nbTriangles; j++){
+            nread=fread(particles->mSpec[i].indices+j, sizeof(unsigned int), 3, file);
+        }
+    }
+    return true;
+}
+
+/*
+    nbSteps                        (1 unsigned int)
+    time step 1                    (1 float)
+    x coordinate particle 1 step 1 (1 float)
+    y coordinate particle 1 step 1 (1 float)
+    z coordinate particle 1 step 1 (1 float)
+    variable 1 particle 1 step 1   (1 float)
+    variable 2 particle 1 step 1   (1 float)
+    etc.
+    x coordinate particle 2 step 1 (1 float)
+    etc.
+    time step 2                    (1 float)
+    etc.
+*/
+static bool loadStepsSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
+    unsigned int nbSteps, i, j;
+    long fPos;
+
+    if(fread(&nbSteps,sizeof(unsigned int),1,file)!=1){
+      *error = "Invalid file: missing steps section.";
+      return false;
+    }
+    fPos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    if(ftell(file)-fPos != (long)(nbSteps*(1+particles->nbParticles*(3+particles->nbVariables))*sizeof(float))){
+      *error = "Invalid file: invalid steps section.";
+      return false;
+    }
+    fseek(file, fPos, SEEK_SET);
+    particles->nbSteps=nbSteps;
+    particles->time=(float*)calloc(nbSteps, sizeof(float));
+    particles->pPos=(float***)calloc(nbSteps, sizeof(float**));
+    for(i=0;i<nbSteps;i++){
+      nread=fread(particles->time+i,sizeof(float),1,file);
+      particles->pPos[i]=(float**)calloc(particles->nbParticles, sizeof(float*));
+      for(j=0;j<particles->nbParticles;j++){
+        particles->pPos[i][j]=(float*)calloc(3+particles->nbVariables, sizeof(float));
+        nread=fread(particles->pPos[i][j],sizeof(float),3+particles->nbVariables,file);
       }
     }
-  }
-  fclose(file);
-  return particles;
+    return true;
+}
+
+Particles *loadParticles(QString &fileName){
+    Particles *particles=NULL;
+    FILE    *file;
+    QString error;
+    unsigned int i;
+    bool (*loadFunctions[])(FILE*, Particles*, QString*) = {
+        loadParSection,
+        loadTypesSection,
+        loadVariablesSection,
+        loadParticlesTypeSection,
+        loadBondsSection,
+        loadMeshesSection,
+        loadStepsSection
+    };
+    file=fopen(fileName.toStdString().data(),"rb");
+    if(file==NULL) {
+        QMessageBox::warning(NULL, QObject::tr("Load Particles"), "Failed to open file.");
+        return NULL;
+    }
+    particles = (Particles*)calloc(1, sizeof(Particles));
+    for(i=0; i<sizeof(loadFunctions)/sizeof(*loadFunctions); i++) {
+        if(!loadFunctions[i](file, particles, &error)){
+            QMessageBox::warning(NULL, QObject::tr("Load Particles"), error);
+            freeParticles(particles);
+            delete particles;
+            return NULL;
+        }
+    }
+    return particles;
 }
 
 /*
@@ -233,10 +355,10 @@ Particles *loadParticlesPAR(QString &fileName){
 */
 Particles *minMaxParticleCopy(Particles *par){
   Particles *particles=NULL;
-  int i,j,k,m;
+  unsigned int i,j,k,m;
 
   if(par!=NULL){
-    particles=new Particles;
+    particles=(Particles*)calloc(1, sizeof(Particles));
     particles->nbTypes = par->nbTypes;
     particles->pSpec=new PartSpec[par->nbTypes];
     memcpy(particles->pSpec,par->pSpec,(par->nbTypes)*sizeof(PartSpec));
@@ -244,10 +366,10 @@ Particles *minMaxParticleCopy(Particles *par){
     particles->nbVariables = par->nbVariables;
     particles->nbParticles = par->nbTypes;
     particles->nbBonds = 0;
+    particles->nbMeshes = 0;
     particles->nbSteps = par->nbSteps>0?2:0;
-    particles->varName=new char*[3+particles->nbVariables];
+    particles->varName=(char(*)[NAME_LENGTH+1])calloc(3+particles->nbVariables, sizeof(char[NAME_LENGTH+1]));
     for(i=0;i<3+particles->nbVariables;i++){
-      particles->varName[i]=new char[NAME_LENGTH+1];
       memcpy(particles->varName[i],par->varName[i],(NAME_LENGTH+1)*sizeof(char));
     }
     particles->pType=NULL;
@@ -314,24 +436,30 @@ Particles *minMaxParticleCopy(Particles *par){
 }
 
 void freeParticles(Particles *particles){
-  int i,j;
+  unsigned int i,j;
   if(particles==NULL)
     return;
   if(particles->pSpec!=NULL)    delete [] particles->pSpec;
   if(particles->pType!=NULL)    delete [] particles->pType;
-  if(particles->time!=NULL)      delete [] particles->time;
-  for(i=0;i<particles->nbBonds;i++)
-    if(particles->bonds[i]!=NULL)  delete [] particles->bonds[i];
-  if(particles->bonds!=NULL)    delete [] particles->bonds;
-  for(i=0;i<particles->nbSteps;i++){
-    for(j=0;j<particles->nbParticles;j++)
-      if(particles->pPos[i][j]!=NULL)  delete [] particles->pPos[i][j];
-    if(particles->pPos[i]!=NULL)  delete [] particles->pPos[i];
-  }
-  if(particles->pPos!=NULL)      delete [] particles->pPos;
-  for(i=0;i<3+particles->nbVariables;i++)
-    if(particles->varName[i]!=NULL)  delete [] particles->varName[i];
   if(particles->varName!=NULL)  delete [] particles->varName;
+  if(particles->time!=NULL)      delete [] particles->time;
+  if(particles->bonds!=NULL)    delete [] particles->bonds;
+  if(particles->mSpec!=NULL){
+      for(i=0; i<particles->nbMeshes; i++){
+          if(particles->mSpec[i].indices!=NULL) delete [] particles->mSpec[i].indices;
+      }
+      delete [] particles->mSpec;
+  }
+  if(particles->pPos!=NULL){
+      for(i=0;i<particles->nbSteps;i++){
+          if(particles->pPos[i]!=NULL){
+              for(j=0;j<particles->nbParticles;j++)
+                  if(particles->pPos[i][j]!=NULL)  delete [] particles->pPos[i][j];
+              delete [] particles->pPos[i];
+          }
+      }
+      delete [] particles->pPos;
+  }
 }
 
 QColor getParticleColor(Particles *particles, int step, int pIndex){

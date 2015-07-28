@@ -4,5 +4,8 @@ source_gen
 debug
 release
 bin
+.qmake.stash
 object_script*
 *.user
+moc_*
+*.o

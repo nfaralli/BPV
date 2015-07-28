@@ -487,6 +487,28 @@ void drawLines(MyLines &lines){
   glEnable(GL_LIGHTING);
 }
 
+void drawTriangle(float pt0[3], float pt1[3], float pt2[3],
+                 float color0[4], float color1[4], float color2[4]){
+    double   x0,x1,x2,y0,y1,y2,z0,z1,z2;
+    double   nx,ny,nz,norm;
+    x0=pt0[0]; y0=pt0[1]; z0=pt0[2];
+    x1=pt1[0]; y1=pt1[1]; z1=pt1[2];
+    x2=pt2[0]; y2=pt2[1]; z2=pt2[2];
+    nx=(y1-y0)*(z2-z0)-(z1-z0)*(y2-y0);
+    ny=(z1-z0)*(x2-x0)-(x1-x0)*(z2-z0);
+    nz=(x1-x0)*(y2-y0)-(y1-y0)*(x2-x0);
+    norm=sqrt(nx*nx+ny*ny+nz*nz);
+    glBegin(GL_TRIANGLES);
+    glNormal3f(nx/norm,ny/norm,nz/norm);
+    glMaterialfv(GL_FRONT,GL_DIFFUSE,color0);
+    glVertex3f(pt0[0],pt0[1],pt0[2]);
+    glMaterialfv(GL_FRONT,GL_DIFFUSE,color1);
+    glVertex3f(pt1[0],pt1[1],pt1[2]);
+    glMaterialfv(GL_FRONT,GL_DIFFUSE,color2);
+    glVertex3f(pt2[0],pt2[1],pt2[2]);
+    glEnd();
+}
+
 /*draw a mesh according to the structure MyMesh*/
 void drawMesh(MyMesh &mesh){
   GLfloat diffuseColor[4];
@@ -520,7 +542,7 @@ void drawMesh(MyMesh &mesh){
     nz=(x1-x0)*(y2-y0)-(y1-y0)*(x2-x0);
     norm=sqrt(nx*nx+ny*ny+nz*nz);
     glNormal3f(nx/norm,ny/norm,nz/norm);
-      glVertex3f(pt0.x,pt0.y,pt0.z);
+    glVertex3f(pt0.x,pt0.y,pt0.z);
     if(det>=0){
       glVertex3f(pt1.x,pt1.y,pt1.z);
       glVertex3f(pt2.x,pt2.y,pt2.z);

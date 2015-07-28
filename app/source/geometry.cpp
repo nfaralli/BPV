@@ -36,7 +36,7 @@ MyGeometry *loadGeometry(QString &fileName){
   QTextStream data(&file);
   while(!data.atEnd()){
     tmp=data.readLine();
-    tmp.simplified();
+    tmp=tmp.simplified();
     if(!tmp.isEmpty() && !tmp.startsWith("--")){
       line.setString(&tmp);
       line.seek(0);

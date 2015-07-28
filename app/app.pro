@@ -36,6 +36,7 @@ HEADERS += include/textdialog.h \
     include/infowidgetbgd.h \
     include/infowidgetbnd.h \
     include/infowidgetgeo.h \
+    include/infowidgetmsh.h \
     include/infowidgetpar.h \
     include/mycolor.h \
     include/mymainwin.h \
@@ -55,6 +56,7 @@ SOURCES += source/textdialog.cpp \
     source/infowidgetbgd.cpp \
     source/infowidgetbnd.cpp \
     source/infowidgetgeo.cpp \
+    source/infowidgetmsh.cpp \
     source/infowidgetpar.cpp \
     source/main.cpp \
     source/mycolor.cpp \

@@ -167,7 +167,7 @@ void ColorDialog::resetMinMax(){
   if(particles!=NULL){
     int index=selVarCb->currentIndex()-1;
     float min,max,value;
-    int i,j=0;
+    unsigned int i,j=0;
     if(index<0){
       min=max=particles->time[0];
       for(i=1;i<particles->nbSteps;i++){

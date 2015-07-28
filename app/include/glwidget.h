@@ -45,6 +45,7 @@ public slots:
   void switchView(bool persp);  
   void setEnabledParticles(bool);
   void setEnabledBonds(bool);
+  void setEnabledMeshes(bool);
   void setEnabledGeometry(bool);
   void updateBackground(MyColor);
   void setAnimTrajectory(bool);
@@ -58,6 +59,8 @@ public slots:
   void setPartSpec(int,PartSpec);
   void setAllPartSpec(PartSpec*);
   void setBondSpec(BondSpec);
+  void setMeshSpec(int,MeshSpec);
+  void setAllMeshSpec(MeshSpec*);
   void resetGeometry();
   void loadFont(const char *font);
 
@@ -82,7 +85,7 @@ protected:
   bool blankParticle(int index, int theStep);
   void resetTrajectory();
   void printScr(int x, int y, const char *format, ...);
-  void updateTimeStr(int theStep);
+  void updateTimeStr(unsigned int theStep);
   void printMat(GLenum mode);
 
 public:
@@ -112,10 +115,12 @@ private:
   int      viewWidth, viewHeight;
   bool     enabledParticles;
   bool     enabledBonds;
+  bool     enabledMeshes;
   bool     enabledGeometry;
   bool     useGlList;
   int      nbParticles;
   int      nbBonds;
+  int      nbMeshes;
   int      nbTypes;
   MyColor  bgColor;
   bool     animTra;

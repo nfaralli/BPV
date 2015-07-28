@@ -16,6 +16,7 @@
 #include "infowidgetbgd.h"
 #include "infowidgetpar.h"
 #include "infowidgetbnd.h"
+#include "infowidgetmsh.h"
 #include "infowidgetgeo.h"
 #include "mycolor.h"
 
@@ -33,6 +34,7 @@ private slots:
 
 private:
   void createDockWindows();
+  void setDockWidget();
 
   MyWidget      *myWidget;
   QMenu         *viewMenu;
@@ -57,7 +59,9 @@ private:
   InfoWidgetBgd *infoBgd;
   InfoWidgetPar *infoPar;
   InfoWidgetBnd *infoBnd;
+  InfoWidgetMsh *infoMsh;
   InfoWidgetGeo *infoGeo;
+  QDockWidget   *dockWidget;
 };
 
 #endif

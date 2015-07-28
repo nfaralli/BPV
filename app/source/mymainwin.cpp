@@ -1,6 +1,8 @@
 #include "mymainwin.h"
 #include <QDockWidget>
 #include <QMessageBox>
+#include <QScrollBar>
+#include <QScrollArea>
 
 MyMainWin::MyMainWin(){
 
@@ -101,10 +103,9 @@ MyMainWin::MyMainWin(){
 }
 
 void MyMainWin::createDockWindows(){
-  QDockWidget *dock = new QDockWidget(tr("Visualization"), this);
-  dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+  dockWidget = new QDockWidget(tr("Visualization"), this);
+  dockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-  QWidget *setup=new QWidget(this);
   infoBgd=new InfoWidgetBgd;
   QObject::connect(infoBgd,SIGNAL(backgroundChanged(MyColor)),
                    myWidget->glWidget,SLOT(updateBackground(MyColor)));
@@ -119,19 +120,18 @@ void MyMainWin::createDockWindows(){
   QObject::connect(infoBnd,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledBonds(bool)));
   QObject::connect(infoBnd,SIGNAL(bondSpecChanged(BondSpec)),
                    myWidget->glWidget,SLOT(setBondSpec(BondSpec)));
+  infoMsh=new InfoWidgetMsh;
+  QObject::connect(infoMsh,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledMeshes(bool)));
+  QObject::connect(infoMsh,SIGNAL(meshSpecChanged(int,MeshSpec)),
+                   myWidget->glWidget,SLOT(setMeshSpec(int,MeshSpec)));
+  QObject::connect(infoMsh,SIGNAL(allMeshSpecChanged(MeshSpec*)),
+                   myWidget->glWidget,SLOT(setAllMeshSpec(MeshSpec*)));
   infoGeo=new InfoWidgetGeo;
   QObject::connect(infoGeo,SIGNAL(clicked(bool)),myWidget->glWidget,SLOT(setEnabledGeometry(bool)));
   QObject::connect(infoGeo,SIGNAL(geometryChanged()),myWidget->glWidget,SLOT(resetGeometry()));
-  QVBoxLayout *vLayout=new QVBoxLayout;
-  vLayout->addWidget(infoBgd);
-  vLayout->addWidget(infoPar);
-  vLayout->addWidget(infoBnd);
-  vLayout->addWidget(infoGeo);
-  vLayout->addStretch();
-  setup->setLayout(vLayout);
-  setup->setMaximumWidth(setup->layout()->minimumSize().width());
-  dock->setWidget(setup);
-  visuAct=dock->toggleViewAction();
+
+  setDockWidget();
+  visuAct=dockWidget->toggleViewAction();
   visuAct->setText(tr("&Visualization..."));
   visuAct->setShortcut(tr("Ctrl+V"));
   visuAct->setCheckable(true);
@@ -140,8 +140,38 @@ void MyMainWin::createDockWindows(){
   QObject::connect(myWidget,SIGNAL(particlesChanged(bool)),visuAct,SLOT(setEnabled(bool)));
   QObject::connect(myWidget,SIGNAL(geometryChanged(bool)),visuAct,SLOT(setEnabled(bool)));
   viewMenu->addAction(visuAct);
-  dock->close();
-  addDockWidget(Qt::LeftDockWidgetArea, dock);
+  dockWidget->close();
+  addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
+}
+
+void MyMainWin::setDockWidget(){
+    QWidget *setup;
+    QScrollArea *scrollArea;
+    QVBoxLayout *vLayout=new QVBoxLayout;
+    vLayout->addWidget(infoBgd);
+    if(particles!=NULL){
+        vLayout->addWidget(infoPar);
+        if(particles->nbBonds>0){
+          vLayout->addWidget(infoBnd);
+        }
+        if(particles->nbMeshes>0) {
+          vLayout->addWidget(infoMsh);
+        }
+    }
+    if(geometry!=NULL) {
+        vLayout->addWidget(infoGeo);
+    }
+    vLayout->addStretch();
+    setup = new QWidget(this);
+    setup->setLayout(vLayout);
+    setup->setMaximumWidth(vLayout->minimumSize().width());
+    scrollArea = new QScrollArea(this);
+    scrollArea->setWidget(setup);
+    int width = vLayout->minimumSize().width()+scrollArea->verticalScrollBar()->sizeHint().width();
+    // the +2 seems to be needed on Mac to get rid of the horizontal scroll bar.
+    scrollArea->setMinimumWidth(width+2);
+    scrollArea->setMaximumWidth(width+2);
+    dockWidget->setWidget(scrollArea);
 }
 
 void MyMainWin::open(){
@@ -154,7 +184,7 @@ void MyMainWin::open(QString fileName){
   if(!fileName.isEmpty()){
     if(fileName.endsWith(".par")){
       Particles *part=NULL;
-      part=loadParticlesPAR(fileName);
+      part=loadParticles(fileName);
       if(part!=NULL){
         myWidget->clearParticles();
         freeParticles(particles);
@@ -162,7 +192,9 @@ void MyMainWin::open(QString fileName){
         myWidget->setNewParticles(particles);
         infoPar->loadParticles(particles);
         infoBnd->loadParticles(particles);
+        infoMsh->loadParticles(particles);
         axisAct->setChecked(true);
+        setDockWidget();
       }
     }
     else if(fileName.endsWith(".geo")){
@@ -174,6 +206,7 @@ void MyMainWin::open(QString fileName){
         geometry=geo;
         myWidget->setNewGeometry(geometry);
         infoGeo->loadGeometry(geometry);
+        setDockWidget();
       }
     }
     else
