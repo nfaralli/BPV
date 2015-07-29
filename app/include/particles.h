@@ -33,6 +33,7 @@ typedef struct {
   unsigned int    (*indices)[3];  //array of nbTriangles unsigned int[3]
   bool            showWires;      //show wires instead of triangles if set to true
   bool            cullBackFace;   //hide back face if set to true (default=true);
+  bool            sameType;       //true if all the particles in the mesh are of the same type.
 } MeshSpec;
 
 typedef struct {

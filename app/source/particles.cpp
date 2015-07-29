@@ -222,7 +222,9 @@ static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
 */
 static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) {
     size_t nread;
+    MeshSpec *mSpec;
     unsigned int nbMeshes, nbTriangles, i, j;
+    unsigned char type;
     long fPos;
 
     if(fread(&nbMeshes,sizeof(unsigned int),1,file)!=1){
@@ -240,8 +242,8 @@ static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) 
     fseek(file, fPos, SEEK_SET);
     particles->nbMeshes = nbMeshes;
     particles->mSpec = (MeshSpec*)calloc(nbMeshes, sizeof(MeshSpec));
-    for(i=0; i<nbMeshes; i++){
-        if(fread(particles->mSpec[i].name,sizeof(char),NAME_LENGTH,file)!=NAME_LENGTH){
+    for(mSpec=particles->mSpec; mSpec<particles->mSpec+nbMeshes; mSpec++){
+        if(fread(mSpec->name,sizeof(char),NAME_LENGTH,file)!=NAME_LENGTH){
           *error = "Invalid file: invalid meshes section.";
           return false;
         }
@@ -256,13 +258,28 @@ static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) 
           return false;
         }
         fseek(file, fPos, SEEK_SET);
-        particles->mSpec[i].active=true;
-        particles->mSpec[i].showWires=false;
-        particles->mSpec[i].cullBackFace=true;
-        particles->mSpec[i].nbTriangles = nbTriangles;
-        particles->mSpec[i].indices = (unsigned int(*)[3])calloc(nbTriangles, sizeof(unsigned int[3]));
-        for(j=0; j<particles->mSpec[i].nbTriangles; j++){
-            nread=fread(particles->mSpec[i].indices+j, sizeof(unsigned int), 3, file);
+        mSpec->active=true;
+        mSpec->showWires=false;
+        mSpec->cullBackFace=true;
+        mSpec->nbTriangles = nbTriangles;
+        mSpec->indices = (unsigned int(*)[3])calloc(nbTriangles, sizeof(unsigned int[3]));
+        for(i=0; i<mSpec->nbTriangles; i++){
+            nread=fread(mSpec->indices+i, sizeof(unsigned int), 3, file);
+        }
+        mSpec->sameType=true;
+        if(nbTriangles>0){
+            type=particles->pType[mSpec->indices[0][0]];
+            for(i=0; i<mSpec->nbTriangles; i++){
+                for(j=0; j<3; j++){
+                    if(particles->pType[mSpec->indices[i][0]]!=type){
+                        mSpec->sameType=false;
+                        break;
+                    }
+                }
+                if(j<3){
+                    break;
+                }
+            }
         }
     }
     return true;

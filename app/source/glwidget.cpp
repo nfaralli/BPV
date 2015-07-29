@@ -532,60 +532,115 @@ void GLWidget::drawScene(bool opaque){
     if(enabledMeshes){
         for(index=0; index<particles->nbMeshes; index++){
             mSpec=particles->mSpec+index;
-            if(!mSpec->active){
+            if(!mSpec->active || mSpec->nbTriangles==0){
                 continue;
             }
-            for(indexMesh=0; indexMesh<mSpec->nbTriangles; indexMesh++){
-                triangle=mSpec->indices[indexMesh];
-                type1 = particles->pType[triangle[0]];
-                type2 = particles->pType[triangle[1]];
-                type3 = particles->pType[triangle[2]];
-                showMesh = particles->pSpec[type1].active&&particles->pSpec[type2].active&&
-                        particles->pSpec[type3].active;
-                if(nbBlanksUsed>0) showMesh = showMesh&&(!blankParticle(triangle[0], step))
-                    &&(!blankParticle(triangle[1], step))&&(!blankParticle(triangle[2], step));
-                if(!showMesh){
+            type = particles->pType[mSpec->indices[0][0]];
+            if(!mSpec->showWires){
+                // The following translation is actually needed,
+                // otherwise lighting can be wrong sometimes...
+                // e.g. meshes and points are enabled (not spheres).
+                // Don't know why though...
+                glTranslatef(0, 0, 0);
+            }
+            // Special case where all the particles have the same type and have a constant color.
+            if(mSpec->sameType && !particles->pSpec[type].color.isGradColorEnabled()){
+                if(!particles->pSpec[type].active) {
                     continue;
                 }
-                pos1 = particles->pPos[step][triangle[0]];
-                pos2 = particles->pPos[step][triangle[1]];
-                pos3 = particles->pPos[step][triangle[2]];
-                if(pos1[0]==INFINITY || pos2[0]==INFINITY || pos3[0]==INFINITY){
-                    continue;
-                }
-                color1 = getParticleColor(particles, step, triangle[0]);
-                color2 = getParticleColor(particles, step, triangle[1]);
-                color3 = getParticleColor(particles, step, triangle[2]);
-                if((!opaque&&color1.alpha()==255&&color2.alpha()==255&&color3.alpha()==255) ||
-                   (opaque&&(color1.alpha()<255||color2.alpha()<255||color3.alpha()<255))){
+                color = getParticleColor(particles, step, mSpec->indices[0][0]);
+                if((!opaque&&(color.alpha()==255)) || (opaque&&(color.alpha()<255))){
                     continue;
                 }
                 if(mSpec->showWires){
                     glDisable(GL_LIGHTING);
-                    glBegin(GL_LINE_LOOP);
-                    glColor4f(color1.redF(), color1.greenF(), color1.blueF(), color1.alphaF());
-                    glVertex3f(pos1[0], pos1[1], pos1[2]);
-                    glColor4f(color2.redF(), color2.greenF(), color2.blueF(), color2.alphaF());
-                    glVertex3f(pos2[0], pos2[1], pos2[2]);
-                    glColor4f(color3.redF(), color3.greenF(), color3.blueF(), color3.alphaF());
-                    glVertex3f(pos3[0], pos3[1], pos3[2]);
-                    glEnd();
-                    glEnable(GL_LIGHTING);
+                    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
                 } else {
-                    pt0[0]=pos1[0]; pt0[1]=pos1[1]; pt0[2]=pos1[2];
-                    pt1[0]=pos2[0]; pt1[1]=pos2[1]; pt1[2]=pos2[2];
-                    pt2[0]=pos3[0]; pt2[1]=pos3[1]; pt2[2]=pos3[2];
-                    c0[0]=color1.redF(); c0[1]=color1.greenF(); c0[2]=color1.blueF(); c0[3]=color1.alphaF();
-                    c1[0]=color2.redF(); c1[1]=color2.greenF(); c1[2]=color2.blueF(); c1[3]=color2.alphaF();
-                    c2[0]=color3.redF(); c2[1]=color3.greenF(); c2[2]=color3.blueF(); c2[3]=color3.alphaF();
-                    // The following translation is actually needed,
-                    // otherwise lighting can be wrong sometimes...
-                    // e.g. meshes and points are enabled (not spheres).
-                    // Don't know why though...
-                    glTranslatef(0, 0, 0);
-                    drawTriangle(pt0, pt1, pt2, c0, c1, c2);
-                    if(!mSpec->cullBackFace){
-                        drawTriangle(pt0, pt2, pt1, c0, c2, c1);
+                    c0[0]=color.redF();
+                    c0[1]=color.greenF();
+                    c0[2]=color.blueF();
+                    c0[3]=color.alphaF();
+                    glMaterialfv(GL_FRONT,GL_DIFFUSE,c0);
+                }
+                for(indexMesh=0; indexMesh<mSpec->nbTriangles; indexMesh++){
+                    triangle=mSpec->indices[indexMesh];
+                    if(nbBlanksUsed>0) {
+                        if(blankParticle(triangle[0], step) ||
+                           blankParticle(triangle[1], step) ||
+                           blankParticle(triangle[2], step)) {
+                            continue;
+                        }
+                    }
+                    pos1 = particles->pPos[step][triangle[0]];
+                    pos2 = particles->pPos[step][triangle[1]];
+                    pos3 = particles->pPos[step][triangle[2]];
+                    if(pos1[0]==INFINITY || pos2[0]==INFINITY || pos3[0]==INFINITY){
+                        continue;
+                    }
+                    if(mSpec->showWires){
+                        glBegin(GL_LINE_LOOP);
+                        glVertex3f(pos1[0], pos1[1], pos1[2]);
+                        glVertex3f(pos2[0], pos2[1], pos2[2]);
+                        glVertex3f(pos3[0], pos3[1], pos3[2]);
+                        glEnd();
+                    } else {
+                        drawTriangle(pos1, pos2, pos3);
+                        if(!mSpec->cullBackFace){
+                            drawTriangle(pos1, pos3, pos2);
+                        }
+                    }
+                }
+                if(mSpec->showWires){
+                    glEnable(GL_LIGHTING);
+                }
+            } else {
+                for(indexMesh=0; indexMesh<mSpec->nbTriangles; indexMesh++){
+                    triangle=mSpec->indices[indexMesh];
+                    type1 = particles->pType[triangle[0]];
+                    type2 = particles->pType[triangle[1]];
+                    type3 = particles->pType[triangle[2]];
+                    showMesh = particles->pSpec[type1].active&&particles->pSpec[type2].active&&
+                            particles->pSpec[type3].active;
+                    if(nbBlanksUsed>0) showMesh = showMesh&&(!blankParticle(triangle[0], step))
+                        &&(!blankParticle(triangle[1], step))&&(!blankParticle(triangle[2], step));
+                    if(!showMesh){
+                        continue;
+                    }
+                    pos1 = particles->pPos[step][triangle[0]];
+                    pos2 = particles->pPos[step][triangle[1]];
+                    pos3 = particles->pPos[step][triangle[2]];
+                    if(pos1[0]==INFINITY || pos2[0]==INFINITY || pos3[0]==INFINITY){
+                        continue;
+                    }
+                    color1 = getParticleColor(particles, step, triangle[0]);
+                    color2 = getParticleColor(particles, step, triangle[1]);
+                    color3 = getParticleColor(particles, step, triangle[2]);
+                    if((!opaque&&color1.alpha()==255&&color2.alpha()==255&&color3.alpha()==255) ||
+                       (opaque&&(color1.alpha()<255||color2.alpha()<255||color3.alpha()<255))){
+                        continue;
+                    }
+                    if(mSpec->showWires){
+                        glDisable(GL_LIGHTING);
+                        glBegin(GL_LINE_LOOP);
+                        glColor4f(color1.redF(), color1.greenF(), color1.blueF(), color1.alphaF());
+                        glVertex3f(pos1[0], pos1[1], pos1[2]);
+                        glColor4f(color2.redF(), color2.greenF(), color2.blueF(), color2.alphaF());
+                        glVertex3f(pos2[0], pos2[1], pos2[2]);
+                        glColor4f(color3.redF(), color3.greenF(), color3.blueF(), color3.alphaF());
+                        glVertex3f(pos3[0], pos3[1], pos3[2]);
+                        glEnd();
+                        glEnable(GL_LIGHTING);
+                    } else {
+                        pt0[0]=pos1[0]; pt0[1]=pos1[1]; pt0[2]=pos1[2];
+                        pt1[0]=pos2[0]; pt1[1]=pos2[1]; pt1[2]=pos2[2];
+                        pt2[0]=pos3[0]; pt2[1]=pos3[1]; pt2[2]=pos3[2];
+                        c0[0]=color1.redF(); c0[1]=color1.greenF(); c0[2]=color1.blueF(); c0[3]=color1.alphaF();
+                        c1[0]=color2.redF(); c1[1]=color2.greenF(); c1[2]=color2.blueF(); c1[3]=color2.alphaF();
+                        c2[0]=color3.redF(); c2[1]=color3.greenF(); c2[2]=color3.blueF(); c2[3]=color3.alphaF();
+                        drawTriangle(pt0, pt1, pt2, c0, c1, c2);
+                        if(!mSpec->cullBackFace){
+                            drawTriangle(pt0, pt2, pt1, c0, c2, c1);
+                        }
                     }
                 }
             }
