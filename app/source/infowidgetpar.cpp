@@ -25,7 +25,7 @@ InfoWidgetPar::InfoWidgetPar(Particles *part,QWidget *parent) : QGroupBox("Parti
   colorLb=new QLabel("Color:");
   selColorBt=new QPushButton();
   colorBt=new QPushButton("Apply to all");
-  transpLb=new QLabel("Transparence:");
+  transpLb=new QLabel("Transparency:");
   transpSl=new QSlider(Qt::Horizontal);
   transpSl->setRange(0,255);
   transpBt=new QPushButton("Apply to all");
@@ -53,8 +53,8 @@ InfoWidgetPar::InfoWidgetPar(Particles *part,QWidget *parent) : QGroupBox("Parti
   QObject::connect(typeBx,SIGNAL(currentIndexChanged (int)),this,SLOT(setType(int)));
   QObject::connect(selColorBt,SIGNAL(pressed()),this,SLOT(changeColor()));
   QObject::connect(colorBt,SIGNAL(pressed()),this,SLOT(changeAllColor()));
-  QObject::connect(transpSl,SIGNAL(valueChanged(int)),this,SLOT(changeTransparence()));
-  QObject::connect(transpBt,SIGNAL(pressed()),this,SLOT(changeAllTransparence()));
+  QObject::connect(transpSl,SIGNAL(valueChanged(int)),this,SLOT(changeTransparency()));
+  QObject::connect(transpBt,SIGNAL(pressed()),this,SLOT(changeAllTransparency()));
   QObject::connect(pointBx,SIGNAL(clicked(bool)),this,SLOT(changeShowPoints(bool)));
   QObject::connect(pointBt,SIGNAL(pressed()),this,SLOT(changeAllShowPoints()));
   QObject::connect(ptSizeSb,SIGNAL(valueChanged(int)),this,SLOT(changePtSize(int)));
@@ -189,7 +189,7 @@ void InfoWidgetPar::changeAllColor(){
   emit allPartSpecChanged(pSpec);
 }
 
-void InfoWidgetPar::changeTransparence(){
+void InfoWidgetPar::changeTransparency(){
   if(pSpec!=NULL){
     if(pSpec[typeBx->currentIndex()].color.alpha()!=255-transpSl->value()){
       pSpec[typeBx->currentIndex()].color.setAlpha(255-transpSl->value());
@@ -198,7 +198,7 @@ void InfoWidgetPar::changeTransparence(){
   }
 }
 
-void InfoWidgetPar::changeAllTransparence(){
+void InfoWidgetPar::changeAllTransparency(){
   for(int i=0;i<nbTypes;i++)
     pSpec[i].color.setAlpha(pSpec[typeBx->currentIndex()].color.alpha());
   emit allPartSpecChanged(pSpec);

@@ -24,7 +24,7 @@ private slots:
   void setGeo(int geo);
   void changeActiveGeo(bool enable);
   void changeColor();
-  void changeTransparence();
+  void changeTransparency();
 
 private:
   void enableWidgets();

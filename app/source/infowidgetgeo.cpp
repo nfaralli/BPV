@@ -15,14 +15,14 @@ InfoWidgetGeo::InfoWidgetGeo(MyGeometry *geom,QWidget *parent) : QGroupBox("Geom
   geoBx=new QComboBox;
   colorLb=new QLabel("Color:");
   selColorBt=new QPushButton();
-  transpLb=new QLabel("Transparence:");
+  transpLb=new QLabel("Transparency:");
   transpSl=new QSlider(Qt::Horizontal);
   transpSl->setRange(0,255);
 
   QObject::connect(activeGeoBx,SIGNAL(clicked(bool)),this,SLOT(changeActiveGeo(bool)));
   QObject::connect(geoBx,SIGNAL(currentIndexChanged (int)),this,SLOT(setGeo(int)));
   QObject::connect(selColorBt,SIGNAL(pressed()),this,SLOT(changeColor()));
-  QObject::connect(transpSl,SIGNAL(valueChanged(int)),this,SLOT(changeTransparence()));
+  QObject::connect(transpSl,SIGNAL(valueChanged(int)),this,SLOT(changeTransparency()));
 
   QVBoxLayout *vLayout = new QVBoxLayout;
   QHBoxLayout *hLayout = new QHBoxLayout;
@@ -167,7 +167,7 @@ void InfoWidgetGeo::changeColor(){
   }
 }
 
-void InfoWidgetGeo::changeTransparence(){
+void InfoWidgetGeo::changeTransparency(){
   int col[4];
   int geo;
   if(geometry!=NULL){

@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS = dir2hcpp app
+SUBDIRS = dir2hcpp app examples
 CONFIG += ordered

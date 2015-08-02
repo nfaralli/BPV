@@ -9,3 +9,4 @@ object_script*
 *.user
 moc_*
 *.o
+.DS_Store

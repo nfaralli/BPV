@@ -29,8 +29,8 @@ private slots:
   void changeActiveType(bool enable);
   void changeColor();
   void changeAllColor();
-  void changeTransparence();
-  void changeAllTransparence();
+  void changeTransparency();
+  void changeAllTransparency();
   void changeShowPoints(bool enable);
   void changeAllShowPoints();
   void changePtSize(int size);
