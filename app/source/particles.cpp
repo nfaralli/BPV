@@ -82,7 +82,6 @@ static bool loadParSection(FILE *file, Particles*, QString *error) {
     etc.
 */
 static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     unsigned char nbTypes, i, r, g, b;
     long fPos;
 
@@ -100,11 +99,11 @@ static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
     particles->nbTypes = nbTypes;
     particles->pSpec=(PartSpec*)calloc(nbTypes, sizeof(PartSpec));
     for(i=0; i<nbTypes; i++){
-      nread=fread(particles->pSpec[i].name,sizeof(char),NAME_LENGTH,file);
-      nread=fread(&(particles->pSpec[i].radius),sizeof(float),1,file);
-      nread=fread(&r,sizeof(unsigned char),1,file);
-      nread=fread(&g,sizeof(unsigned char),1,file);
-      nread=fread(&b,sizeof(unsigned char),1,file);
+      fread(particles->pSpec[i].name,sizeof(char),NAME_LENGTH,file);
+      fread(&(particles->pSpec[i].radius),sizeof(float),1,file);
+      fread(&r,sizeof(unsigned char),1,file);
+      fread(&g,sizeof(unsigned char),1,file);
+      fread(&b,sizeof(unsigned char),1,file);
       particles->pSpec[i].segs=4;
       particles->pSpec[i].color=MyColor(r,g,b);
       particles->pSpec[i].showPoints=true;
@@ -123,7 +122,6 @@ static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
     name    variable 2 (NAME_LENGTH bytes)
 */
 static bool loadVariablesSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     unsigned char nbVariables, i;
     long fPos;
 
@@ -141,7 +139,7 @@ static bool loadVariablesSection(FILE *file, Particles *particles, QString *erro
     particles->nbVariables = nbVariables;
     particles->varName = (char(*)[NAME_LENGTH+1])calloc(3+nbVariables, sizeof(char[NAME_LENGTH+1]));
     for(i=0;i<3+nbVariables;i++){
-      nread=fread(particles->varName[i],sizeof(char),NAME_LENGTH,file);
+      fread(particles->varName[i],sizeof(char),NAME_LENGTH,file);
     }
     return true;
 }
@@ -153,7 +151,6 @@ static bool loadVariablesSection(FILE *file, Particles *particles, QString *erro
     etc.
 */
 static bool loadParticlesTypeSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     unsigned int nbParticles;
     long fPos;
 
@@ -170,7 +167,7 @@ static bool loadParticlesTypeSection(FILE *file, Particles *particles, QString *
     fseek(file, fPos, SEEK_SET);
     particles->nbParticles = nbParticles;
     particles->pType=(unsigned char*)calloc(nbParticles, sizeof(unsigned char));
-    nread=fread(particles->pType,sizeof(unsigned char),nbParticles,file);
+    fread(particles->pType,sizeof(unsigned char),nbParticles,file);
     return true;
 }
 
@@ -183,7 +180,6 @@ static bool loadParticlesTypeSection(FILE *file, Particles *particles, QString *
     etc.
 */
 static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     unsigned int nbBonds, i;
     long fPos;
 
@@ -199,13 +195,13 @@ static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
     }
     fseek(file, fPos, SEEK_SET);
     particles->nbBonds = nbBonds;
-    nread=fread(&(particles->bSpec.radius),sizeof(float),1,file);
+    fread(&(particles->bSpec.radius),sizeof(float),1,file);
     particles->bSpec.slices=32;
     particles->bSpec.stacks=1;
     particles->bSpec.showWires=true;
     particles->bonds=(unsigned int(*)[2])calloc(nbBonds, sizeof(unsigned int[2]));
     for(i=0;i<nbBonds;i++){
-      nread=fread(particles->bonds[i], sizeof(unsigned int), 2, file);
+      fread(particles->bonds[i], sizeof(unsigned int), 2, file);
     }
     return true;
 }
@@ -221,7 +217,6 @@ static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
     etc.
 */
 static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     MeshSpec *mSpec;
     unsigned int nbMeshes, nbTriangles, i, j;
     unsigned char type;
@@ -264,7 +259,7 @@ static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) 
         mSpec->nbTriangles = nbTriangles;
         mSpec->indices = (unsigned int(*)[3])calloc(nbTriangles, sizeof(unsigned int[3]));
         for(i=0; i<mSpec->nbTriangles; i++){
-            nread=fread(mSpec->indices+i, sizeof(unsigned int), 3, file);
+            fread(mSpec->indices+i, sizeof(unsigned int), 3, file);
         }
         mSpec->sameType=true;
         if(nbTriangles>0){
@@ -300,7 +295,6 @@ static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) 
     etc.
 */
 static bool loadStepsSection(FILE *file, Particles *particles, QString *error) {
-    size_t nread;
     unsigned int nbSteps, i, j;
     long fPos;
 
@@ -319,11 +313,11 @@ static bool loadStepsSection(FILE *file, Particles *particles, QString *error) {
     particles->time=(float*)calloc(nbSteps, sizeof(float));
     particles->pPos=(float***)calloc(nbSteps, sizeof(float**));
     for(i=0;i<nbSteps;i++){
-      nread=fread(particles->time+i,sizeof(float),1,file);
+      fread(particles->time+i,sizeof(float),1,file);
       particles->pPos[i]=(float**)calloc(particles->nbParticles, sizeof(float*));
       for(j=0;j<particles->nbParticles;j++){
         particles->pPos[i][j]=(float*)calloc(3+particles->nbVariables, sizeof(float));
-        nread=fread(particles->pPos[i][j],sizeof(float),3+particles->nbVariables,file);
+        fread(particles->pPos[i][j],sizeof(float),3+particles->nbVariables,file);
       }
     }
     return true;
@@ -386,7 +380,7 @@ Particles *minMaxParticleCopy(Particles *par){
     particles->nbMeshes = 0;
     particles->nbSteps = par->nbSteps>0?2:0;
     particles->varName=(char(*)[NAME_LENGTH+1])calloc(3+particles->nbVariables, sizeof(char[NAME_LENGTH+1]));
-    for(i=0;i<3+particles->nbVariables;i++){
+    for(i=0;i<3u+particles->nbVariables;i++){
       memcpy(particles->varName[i],par->varName[i],(NAME_LENGTH+1)*sizeof(char));
     }
     particles->pType=NULL;
@@ -414,7 +408,7 @@ Particles *minMaxParticleCopy(Particles *par){
     }
     //set the min/max of variables (including position)
     if(par->nbSteps>0){
-      for(i=0;i<3+particles->nbVariables;i++){
+      for(i=0;i<3u+particles->nbVariables;i++){
         for(j=0;j<particles->nbParticles;j++){
           for(k=0;k<par->nbParticles;k++){
             if(par->pType[k]==j){

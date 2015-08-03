@@ -154,7 +154,7 @@ static int deleteSystem(System *sys){
  */
 static int setGrid(System *sys, float cellSize){
   Grid *grid;
-  Cell *cell, *cell1, **nghb;
+  Cell *cell, **nghb;
   int alpha,ixyz[3],index;
   int ix,iy,iz,ixyzNghb[3];
   int gridDim[3];
@@ -169,7 +169,6 @@ static int setGrid(System *sys, float cellSize){
     grid->boundaries[alpha][1]=grid->boundaries[alpha][0]+grid->dim[alpha]*cellSize;
   }
   grid->cells=(Cell*)calloc(grid->ncells,sizeof(Cell));
-  cell1=grid->cells+grid->ncells;
   for(index=0, cell=grid->cells; index<grid->ncells; index++, cell++){
     ixyz[0]=index%gridDim[0];
     ixyz[1]=(index/gridDim[0])%gridDim[1];
@@ -612,6 +611,7 @@ static void addWalls(System *sys){
  */
 static Header* createBoxHeader(float radius, unsigned int nbParts, unsigned int nbSteps){
     Header *header;
+    unsigned int i;
 
     header=createHeader(2, 1, nbParts, 0, 0, nbSteps);
     strcpy(header->types[0].name, "balls 1");
@@ -630,7 +630,7 @@ static Header* createBoxHeader(float radius, unsigned int nbParts, unsigned int 
     strcpy(header->xyzNames[2], "z [m]");
     strcpy(header->variables[0], "velocity [m/s]");
 
-    for(unsigned int i=0; i<nbParts; i++){
+    for(i=0; i<nbParts; i++){
         header->particlesType[i]=i&1;
     }
     return header;
