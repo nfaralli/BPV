@@ -82,6 +82,7 @@ static bool loadParSection(FILE *file, Particles*, QString *error) {
     etc.
 */
 static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
+    size_t nread;
     unsigned char nbTypes, i, r, g, b;
     long fPos;
 
@@ -99,11 +100,15 @@ static bool loadTypesSection(FILE *file, Particles *particles, QString *error) {
     particles->nbTypes = nbTypes;
     particles->pSpec=(PartSpec*)calloc(nbTypes, sizeof(PartSpec));
     for(i=0; i<nbTypes; i++){
-      fread(particles->pSpec[i].name,sizeof(char),NAME_LENGTH,file);
-      fread(&(particles->pSpec[i].radius),sizeof(float),1,file);
-      fread(&r,sizeof(unsigned char),1,file);
-      fread(&g,sizeof(unsigned char),1,file);
-      fread(&b,sizeof(unsigned char),1,file);
+      nread=fread(particles->pSpec[i].name,sizeof(char),NAME_LENGTH,file);
+      nread+=fread(&(particles->pSpec[i].radius),sizeof(float),1,file);
+      nread+=fread(&r,sizeof(unsigned char),1,file);
+      nread+=fread(&g,sizeof(unsigned char),1,file);
+      nread+=fread(&b,sizeof(unsigned char),1,file);
+      if(nread!=NAME_LENGTH+4){
+        *error = "Invalid file: invalid types section.";
+        return false;
+      }
       particles->pSpec[i].segs=4;
       particles->pSpec[i].color=MyColor(r,g,b);
       particles->pSpec[i].showPoints=true;
@@ -139,7 +144,10 @@ static bool loadVariablesSection(FILE *file, Particles *particles, QString *erro
     particles->nbVariables = nbVariables;
     particles->varName = (char(*)[NAME_LENGTH+1])calloc(3+nbVariables, sizeof(char[NAME_LENGTH+1]));
     for(i=0;i<3+nbVariables;i++){
-      fread(particles->varName[i],sizeof(char),NAME_LENGTH,file);
+      if(fread(particles->varName[i],sizeof(char),NAME_LENGTH,file)!=NAME_LENGTH){
+        *error = "Invalid file: invalid variables section.";
+        return false;
+      }
     }
     return true;
 }
@@ -167,7 +175,10 @@ static bool loadParticlesTypeSection(FILE *file, Particles *particles, QString *
     fseek(file, fPos, SEEK_SET);
     particles->nbParticles = nbParticles;
     particles->pType=(unsigned char*)calloc(nbParticles, sizeof(unsigned char));
-    fread(particles->pType,sizeof(unsigned char),nbParticles,file);
+    if(fread(particles->pType,sizeof(unsigned char),nbParticles,file)!=nbParticles){
+      *error = "Invalid file: invalid particles type section.";
+      return false;
+    }
     return true;
 }
 
@@ -195,13 +206,19 @@ static bool loadBondsSection(FILE *file, Particles *particles, QString *error) {
     }
     fseek(file, fPos, SEEK_SET);
     particles->nbBonds = nbBonds;
-    fread(&(particles->bSpec.radius),sizeof(float),1,file);
+    if(fread(&(particles->bSpec.radius),sizeof(float),1,file)!=1){
+      *error = "Invalid file: invalid bonds section.";
+      return false;
+    }
     particles->bSpec.slices=32;
     particles->bSpec.stacks=1;
     particles->bSpec.showWires=true;
     particles->bonds=(unsigned int(*)[2])calloc(nbBonds, sizeof(unsigned int[2]));
     for(i=0;i<nbBonds;i++){
-      fread(particles->bonds[i], sizeof(unsigned int), 2, file);
+      if(fread(particles->bonds[i], sizeof(unsigned int), 2, file)!=2){
+        *error = "Invalid file: invalid bonds section.";
+        return false;
+      }
     }
     return true;
 }
@@ -259,7 +276,10 @@ static bool loadMeshesSection(FILE *file, Particles *particles, QString *error) 
         mSpec->nbTriangles = nbTriangles;
         mSpec->indices = (unsigned int(*)[3])calloc(nbTriangles, sizeof(unsigned int[3]));
         for(i=0; i<mSpec->nbTriangles; i++){
-            fread(mSpec->indices+i, sizeof(unsigned int), 3, file);
+            if(fread(mSpec->indices+i, sizeof(unsigned int), 3, file)!=3){
+              *error = "Invalid file: invalid meshes section.";
+              return false;
+            }
         }
         mSpec->sameType=true;
         if(nbTriangles>0){
@@ -313,11 +333,17 @@ static bool loadStepsSection(FILE *file, Particles *particles, QString *error) {
     particles->time=(float*)calloc(nbSteps, sizeof(float));
     particles->pPos=(float***)calloc(nbSteps, sizeof(float**));
     for(i=0;i<nbSteps;i++){
-      fread(particles->time+i,sizeof(float),1,file);
+      if(fread(particles->time+i,sizeof(float),1,file)!=1){
+        *error = "Invalid file: invalid steps section.";
+        return false;
+      }
       particles->pPos[i]=(float**)calloc(particles->nbParticles, sizeof(float*));
       for(j=0;j<particles->nbParticles;j++){
         particles->pPos[i][j]=(float*)calloc(3+particles->nbVariables, sizeof(float));
-        fread(particles->pPos[i][j],sizeof(float),3+particles->nbVariables,file);
+        if(fread(particles->pPos[i][j],sizeof(float),3+particles->nbVariables,file)!=(size_t)(3+particles->nbVariables)){
+          *error = "Invalid file: invalid steps section.";
+          return false;
+        }
       }
     }
     return true;
